@@ -1,6 +1,9 @@
 from opentelemetry.trace import Status, StatusCode, SpanKind
 from internal import interface
 from internal import common
+from typing import Optional, List, Dict, Any
+import json
+import re
 
 
 class EduPromptService(interface.IEduPromptService):
@@ -21,11 +24,8 @@ class EduPromptService(interface.IEduPromptService):
                 }
         ) as span:
             try:
-                # Получаем прогресс студента
-                progress = await self.edu_progress_repo.get_progress_by_account_id(account_id)
-                current_topic = await self.edu_progress_repo.get_current_topic(account_id)
-                current_block = await self.edu_progress_repo.get_current_block(account_id)
-                current_chapter = await self.edu_progress_repo.get_current_chapter(account_id)
+                # Получаем полный контекст студента
+                context = await self._get_student_context(account_id)
 
                 prompt = f"""
 КТО ТЫ:
@@ -37,10 +37,7 @@ class EduPromptService(interface.IEduPromptService):
 
 Ты помогаешь студентам готовиться к собеседованиям и развивать навыки презентации себя.
 
-ТЕКУЩЕЕ ОБУЧЕНИЕ СТУДЕНТА:
-- Тема: {current_topic.name if current_topic else "Не определена"}
-- Блок: {current_block.name if current_block else "Не определен"}  
-- Глава: {current_chapter.name if current_chapter else "Не определена"}
+{context}
 
 ТВОИ ЗАДАЧИ:
 - Проводить mock-интервью с студентом
@@ -70,7 +67,8 @@ class EduPromptService(interface.IEduPromptService):
 - Критиковать без конструктивных предложений
 - Выходить за рамки темы интервью и карьеры
 
-{self.__edu_switch_rules("interview_expert")}
+{self._get_navigation_rules()}
+{self._get_expert_switch_rules("interview_expert")}
 """
 
                 span.set_status(Status(StatusCode.OK))
@@ -89,11 +87,8 @@ class EduPromptService(interface.IEduPromptService):
                 }
         ) as span:
             try:
-                # Получаем прогресс студента
-                progress = await self.edu_progress_repo.get_progress_by_account_id(account_id)
-                current_topic = await self.edu_progress_repo.get_current_topic(account_id)
-                current_block = await self.edu_progress_repo.get_current_block(account_id)
-                current_chapter = await self.edu_progress_repo.get_current_chapter(account_id)
+                # Получаем полный контекст студента
+                context = await self._get_student_context(account_id)
 
                 prompt = f"""
 КТО ТЫ:
@@ -105,12 +100,7 @@ class EduPromptService(interface.IEduPromptService):
 
 Ты помогаешь студентам изучать материал, объясняешь сложные концепции и направляешь в обучении.
 
-ТЕКУЩЕЕ ОБУЧЕНИЕ СТУДЕНТА:
-- Тема: {current_topic.name if current_topic else "Не определена"}
-- План обучения: {current_topic.edu_plan if current_topic else "Не определен"}
-- Текущий блок: {current_block.name if current_block else "Не определен"}
-- Текущая глава: {current_chapter.name if current_chapter else "Не определена"}
-- Содержание блока: {current_block.content if current_block else "Не определено"}
+{context}
 
 ТВОИ ЗАДАЧИ:
 - Объяснять материал простым и понятным языком
@@ -120,6 +110,7 @@ class EduPromptService(interface.IEduPromptService):
 - Мотивировать к дальнейшему изучению
 - Рекомендовать дополнительные ресурсы
 - Помогать с домашними заданиями
+- Направлять по учебной программе
 
 СТИЛЬ ОБЩЕНИЯ:
 - Терпеливый и понимающий
@@ -141,7 +132,8 @@ class EduPromptService(interface.IEduPromptService):
 - Обещать быстрые результаты без усилий
 - Давать ответы на тесты и экзамены
 
-{self.__edu_switch_rules("teacher")}
+{self._get_navigation_rules()}
+{self._get_expert_switch_rules("teacher")}
 """
 
                 span.set_status(Status(StatusCode.OK))
@@ -160,11 +152,8 @@ class EduPromptService(interface.IEduPromptService):
                 }
         ) as span:
             try:
-                # Получаем прогресс студента
-                progress = await self.edu_progress_repo.get_progress_by_account_id(account_id)
-                current_topic = await self.edu_progress_repo.get_current_topic(account_id)
-                current_block = await self.edu_progress_repo.get_current_block(account_id)
-                current_chapter = await self.edu_progress_repo.get_current_chapter(account_id)
+                # Получаем полный контекст студента
+                context = await self._get_student_context(account_id)
 
                 prompt = f"""
 КТО ТЫ:
@@ -176,12 +165,7 @@ class EduPromptService(interface.IEduPromptService):
 
 Ты создаешь тесты, проверяешь знания студентов и помогаешь им подготовиться к экзаменам.
 
-ТЕКУЩЕЕ ОБУЧЕНИЕ СТУДЕНТА:
-- Тема: {current_topic.name if current_topic else "Не определена"}
-- Текущий блок: {current_block.name if current_block else "Не определен"}
-- Содержание блока: {current_block.content if current_block else "Не определено"}
-- Текущая глава: {current_chapter.name if current_chapter else "Не определена"}
-- Содержание главы: {current_chapter.content if current_chapter else "Не определено"}
+{context}
 
 ТВОИ ЗАДАЧИ:
 - Создавать тесты и вопросы по изученному материалу
@@ -221,7 +205,8 @@ class EduPromptService(interface.IEduPromptService):
 - Создавать слишком сложные вопросы для уровня
 - Проводить тестирование без объяснения результатов
 
-{self.__edu_switch_rules("test_expert")}
+{self._get_navigation_rules()}
+{self._get_expert_switch_rules("test_expert")}
 """
 
                 span.set_status(Status(StatusCode.OK))
@@ -231,10 +216,115 @@ class EduPromptService(interface.IEduPromptService):
                 span.set_status(Status(StatusCode.ERROR, str(err)))
                 raise err
 
-    def __edu_switch_rules(self, exclude_expert: str) -> str:
-        """
-        Генерирует правила переключения между экспертами в образовательной системе
-        """
+    async def _get_student_context(self, account_id: int) -> str:
+        """Получает полный контекст студента для формирования промпта"""
+        try:
+            # Получаем прогресс студента
+            progress = await self.edu_progress_repo.get_progress_by_account_id(account_id)
+            current_topic = await self.edu_progress_repo.get_current_topic(account_id)
+            current_block = await self.edu_progress_repo.get_current_block(account_id)
+            current_chapter = await self.edu_progress_repo.get_current_chapter(account_id)
+
+            # Получаем доступные темы, блоки и главы
+            available_topics = await self.edu_progress_repo.get_available_topics(account_id)
+            available_blocks = await self.edu_progress_repo.get_available_blocks(account_id)
+            available_chapters = await self.edu_progress_repo.get_available_chapters(account_id)
+
+            # Получаем пройденные материалы
+            completed_topics = await self.edu_progress_repo.get_completed_topics(account_id)
+            completed_blocks = await self.edu_progress_repo.get_completed_blocks(account_id)
+            completed_chapters = await self.edu_progress_repo.get_completed_chapters(account_id)
+
+            context = f"""
+ТЕКУЩЕЕ СОСТОЯНИЕ СТУДЕНТА:
+- Текущая тема: {current_topic.name if current_topic else "Не выбрана"}
+- Описание темы: {current_topic.intro if current_topic else "Не определено"}
+- План обучения: {current_topic.edu_plan if current_topic else "Не определен"}
+- Текущий блок: {current_block.name if current_block else "Не выбран"}
+- Содержание блока: {current_block.content if current_block and len(current_block.content) < 500 else "Большой объем контента" if current_block else "Не определено"}
+- Текущая глава: {current_chapter.name if current_chapter else "Не выбрана"}
+- Содержание главы: {current_chapter.content if current_chapter and len(current_chapter.content) < 500 else "Большой объем контента" if current_chapter else "Не определено"}
+
+ПРОГРЕСС СТУДЕНТА:
+- Завершенные темы: {len(completed_topics)} из {len(available_topics)}
+- Завершенные блоки: {len(completed_blocks)} из {len(available_blocks)}
+- Завершенные главы: {len(completed_chapters)} из {len(available_chapters)}
+
+ДОСТУПНЫЕ МАТЕРИАЛЫ:
+- Доступные темы: {', '.join([t.name for t in available_topics[:5]])}{'...' if len(available_topics) > 5 else ''}
+- Доступные блоки в текущей теме: {', '.join([b.name for b in available_blocks[:3]])}{'...' if len(available_blocks) > 3 else ''}
+- Доступные главы в текущем блоке: {', '.join([c.name for c in available_chapters[:3]])}{'...' if len(available_chapters) > 3 else ''}
+
+РЕКОМЕНДАЦИИ:
+{self._get_recommendations(progress, current_topic, current_block, current_chapter, completed_topics, completed_blocks, completed_chapters)}
+"""
+            return context
+        except Exception as err:
+            return f"ОШИБКА ПОЛУЧЕНИЯ КОНТЕКСТА: {str(err)}"
+
+    def _get_recommendations(self, progress, current_topic, current_block, current_chapter,
+                             completed_topics, completed_blocks, completed_chapters) -> str:
+        """Генерирует рекомендации для студента"""
+        recommendations = []
+
+        if not current_topic:
+            recommendations.append("Студент должен выбрать тему для изучения")
+        elif not current_block:
+            recommendations.append("Студент должен выбрать блок в текущей теме")
+        elif not current_chapter:
+            recommendations.append("Студент должен выбрать главу в текущем блоке")
+        else:
+            recommendations.append("Студент изучает материал, можно предложить тест после изучения")
+
+        if len(completed_chapters) > 0 and not completed_blocks:
+            recommendations.append("Студент завершил главы, можно предложить тест по блоку")
+
+        if len(completed_blocks) > 0 and not completed_topics:
+            recommendations.append("Студент завершил блоки, можно предложить финальный тест по теме")
+
+        if len(completed_topics) > 2:
+            recommendations.append("Студент изучил несколько тем, можно предложить подготовку к собеседованию")
+
+        return "- " + "\n- ".join(recommendations) if recommendations else "Нет специальных рекомендаций"
+
+    def _get_navigation_rules(self) -> str:
+        """Правила навигации по образовательному контенту"""
+        return f"""
+ПРАВИЛА НАВИГАЦИИ ПО КОНТЕНТУ:
+
+КОМАНДЫ НАВИГАЦИИ:
+1. Переход к теме: "{common.EduNavigationCommand.to_topic}:[ID или название темы]"
+2. Переход к блоку: "{common.EduNavigationCommand.to_block}:[ID или название блока]"  
+3. Переход к главе: "{common.EduNavigationCommand.to_chapter}:[ID или название главы]"
+4. Показать доступные темы: "{common.EduNavigationCommand.show_topics}"
+5. Показать доступные блоки: "{common.EduNavigationCommand.show_blocks}"
+6. Показать доступные главы: "{common.EduNavigationCommand.show_chapters}"
+7. Показать прогресс: "{common.EduNavigationCommand.show_progress}"
+
+КОГДА ИСПОЛЬЗОВАТЬ КОМАНДЫ НАВИГАЦИИ:
+- Студент просит "перейти к теме/блоку/главе"
+- Студент называет конкретную тему/блок/главу
+- Студент спрашивает "что доступно для изучения?"
+- Студент хочет "посмотреть другие темы"
+- Студент говорит "хочу изучать [название]"
+- Студент спрашивает "какой у меня прогресс?"
+- Студент хочет "вернуться к предыдущей теме"
+
+ОПРЕДЕЛЕНИЕ НАМЕРЕНИЙ НАВИГАЦИИ:
+- Ключевые слова: "перейти", "изучать", "хочу", "можно", "доступно", "список", "выбрать"
+- Названия тем/блоков/глав в сообщении студента
+- Вопросы о структуре курса
+- Запросы на смену текущего контента
+
+ВАЖНО:
+- Всегда обновляй контекст после навигации
+- Объясняй студенту, куда он переходит
+- Предупреждай о необходимых предпосылках
+- Показывай связь между темами/блоками/главами
+"""
+
+    def _get_expert_switch_rules(self, exclude_expert: str) -> str:
+        """Генерирует правила переключения между экспертами"""
 
         teacher_rules = f"""
 Команда для переключения на преподавателя: "{common.EduStateSwitchCommand.to_teacher}":
@@ -242,11 +332,13 @@ class EduPromptService(interface.IEduPromptService):
    - Студент не понимает материал и просит объяснения
    - Студент задает вопросы по теории или концепциям
    - Студент просит помочь с домашним заданием
-   - Студент хочет изучить новую тему
+   - Студент хочет изучить новую тему/блок/главу
    - Студент говорит "я не понимаю", "объясни", "расскажи про..."
    - Студент просит примеры или дополнительную информацию по теме
    - Студент хочет повторить материал после неудачного теста
    - Студент спрашивает "как это работает?", "что это значит?"
+   - Студент хочет навигацию по контенту
+   - Студент просит "покажи доступные темы/блоки/главы"
 
    НЕ ПЕРЕКЛЮЧАТЬ ЕСЛИ:
    - Студент готов к тестированию
@@ -265,6 +357,7 @@ class EduPromptService(interface.IEduPromptService):
    - Студент закончил изучение темы/блока/главы
    - Студент просит оценить свой уровень знаний
    - Студент хочет узнать свои слабые места в знаниях
+   - Студент завершил изучение контента и готов к проверке
 
    НЕ ПЕРЕКЛЮЧАТЬ ЕСЛИ:
    - Студент не изучил материал
@@ -284,6 +377,7 @@ class EduPromptService(interface.IEduPromptService):
    - Студент хочет тренировку отвечать на вопросы интервьюера
    - Студент спрашивает про зарплату и переговоры
    - Студент готовится к конкретному собеседованию
+   - Студент завершил изучение нескольких тем и готов к карьере
 
    НЕ ПЕРЕКЛЮЧАТЬ ЕСЛИ:
    - Студент изучает теоретический материал
@@ -304,8 +398,8 @@ class EduPromptService(interface.IEduPromptService):
         # Формируем пронумерованный список правил
         numbered_rules = "\n".join([f"{i + 1}. {rule}" for i, rule in enumerate(expert_rules.values())])
 
-        prompt = f"""
-ПРАВИЛА ДЛЯ ПЕРЕКЛЮЧЕНИЯ МЕЖДУ ЭКСПЕРТАМИ В ОБРАЗОВАТЕЛЬНОЙ СИСТЕМЕ:
+        return f"""
+ПРАВИЛА ДЛЯ ПЕРЕКЛЮЧЕНИЯ МЕЖДУ ЭКСПЕРТАМИ:
 
 {numbered_rules}
 
@@ -316,19 +410,99 @@ class EduPromptService(interface.IEduPromptService):
 - Если неясно - оставайся в текущей роли и уточни у студента
 - Команды переключения отправляй точно как указано выше
 
-ДОПОЛНИТЕЛЬНЫЕ ПРАВИЛА:
-- Если студент завершил изучение темы - предложи тестирование
-- Если студент провалил тест - переключи на преподавателя для повторения
-- Если студент успешно прошел тест и спрашивает "что дальше?" - можешь предложить подготовку к собеседованию
+ЛОГИКА ПЕРЕКЛЮЧЕНИЯ:
+- Если студент завершил изучение темы → предложи тестирование
+- Если студент провалил тест → переключи на преподавателя для повторения
+- Если студент успешно прошел несколько тем → предложи подготовку к собеседованию
+- Если студент хочет изучать новый материал → переключи на преподавателя
 - Всегда объясняй студенту, почему переключаешь на другого эксперта
 
 ПРИМЕРЫ СИТУАЦИЙ:
 - "Я не понимаю эту тему" → к преподавателю
+- "Хочу изучить Python" → к преподавателю + навигация к теме
 - "Проверь, как я выучил материал" → к эксперту по тестированию  
 - "Как подготовиться к собеседованию?" → к эксперту по интервью
-- "Помоги составить резюме" → к эксперту по интервью
-- "Объясни еще раз эту концепцию" → к преподавателю
-- "Хочу пройти тест по этой теме" → к эксперту по тестированию
+- "Покажи доступные темы" → к преподавателю + команда навигации
+- "Перейди к блоку 'Основы программирования'" → к преподавателю + навигация
 """
 
-        return prompt
+    async def detect_navigation_intent(self, message: str, account_id: int) -> Optional[Dict[str, Any]]:
+        """Определяет намерение навигации в сообщении студента"""
+        try:
+            # Получаем контекст для анализа
+            available_topics = await self.edu_progress_repo.get_available_topics(account_id)
+            available_blocks = await self.edu_progress_repo.get_available_blocks(account_id)
+            available_chapters = await self.edu_progress_repo.get_available_chapters(account_id)
+
+            message_lower = message.lower()
+
+            # Проверяем прямые команды навигации
+            navigation_patterns = {
+                'show_topics': ['покажи темы', 'доступные темы', 'список тем', 'какие темы'],
+                'show_blocks': ['покажи блоки', 'доступные блоки', 'список блоков', 'какие блоки'],
+                'show_chapters': ['покажи главы', 'доступные главы', 'список глав', 'какие главы'],
+                'show_progress': ['мой прогресс', 'прогресс обучения', 'что я прошел', 'мои достижения'],
+                'to_topic': ['перейти к теме', 'изучать тему', 'хочу изучить', 'начать тему'],
+                'to_block': ['перейти к блоку', 'изучать блок', 'начать блок'],
+                'to_chapter': ['перейти к главе', 'изучать главу', 'начать главу']
+            }
+
+            for command, patterns in navigation_patterns.items():
+                if any(pattern in message_lower for pattern in patterns):
+                    # Пытаемся извлечь название контента
+                    content_name = self._extract_content_name(message, command)
+                    return {
+                        'command': command,
+                        'content_name': content_name,
+                        'confidence': 0.9
+                    }
+
+            # Проверяем упоминания названий тем/блоков/глав
+            for topic in available_topics:
+                if topic.name.lower() in message_lower:
+                    return {
+                        'command': 'to_topic',
+                        'content_name': topic.name,
+                        'content_id': topic.id,
+                        'confidence': 0.8
+                    }
+
+            for block in available_blocks:
+                if block.name.lower() in message_lower:
+                    return {
+                        'command': 'to_block',
+                        'content_name': block.name,
+                        'content_id': block.id,
+                        'confidence': 0.8
+                    }
+
+            for chapter in available_chapters:
+                if chapter.name.lower() in message_lower:
+                    return {
+                        'command': 'to_chapter',
+                        'content_name': chapter.name,
+                        'content_id': chapter.id,
+                        'confidence': 0.8
+                    }
+
+            return None
+
+        except Exception as err:
+            return None
+
+    def _extract_content_name(self, message: str, command: str) -> Optional[str]:
+        """Извлекает название контента из сообщения"""
+        # Простая логика извлечения названия после ключевых слов
+        patterns = {
+            'to_topic': [r'тему?\s+["\']?([^"\']+)["\']?', r'изучи[ть]?\s+([^\s]+)'],
+            'to_block': [r'блок[у]?\s+["\']?([^"\']+)["\']?'],
+            'to_chapter': [r'глав[у]?\s+["\']?([^"\']+)["\']?']
+        }
+
+        if command in patterns:
+            for pattern in patterns[command]:
+                match = re.search(pattern, message, re.IGNORECASE)
+                if match:
+                    return match.group(1).strip()
+
+        return None

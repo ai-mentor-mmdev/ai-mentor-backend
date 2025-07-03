@@ -28,12 +28,15 @@ class Student:
 class EduProgress:
     id: int
     account_id: int
+
     approved_topic_ids: list[int]
     approved_block_ids: list[int]
     approved_chapter_ids: list[int]
+
     current_topic_id: int
     current_block_id: int
     current_chapter_id: int
+
     created_at: datetime
     updated_at: datetime
 
