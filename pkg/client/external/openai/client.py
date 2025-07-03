@@ -18,13 +18,13 @@ class GPTClient(interface.ILLMClient):
             api_key=api_key,
             http_client=httpx.AsyncClient()
         )
-    # proxy="http://yJJaoHFpzj4tYFoqyWDF:RNW78Fm5@185.162.130.86:10000"
+
     async def generate(
             self,
             history: list[model.EduMessage],
-            system_prompt: str,
-            temperature: float,
-            _model: str = "gpt-4o-mini",
+            system_prompt: str = "",
+            temperature: float = 0.5,
+            llm_model: str = "gpt-4o-mini",
             base64img: str = None
     ) -> str:
         with self.tracer.start_as_current_span(
@@ -32,7 +32,8 @@ class GPTClient(interface.ILLMClient):
                 kind=SpanKind.CLIENT,
         ) as span:
             try:
-                system_prompt = [{"role": "user", "content": system_prompt}]
+                if system_prompt != "":
+                    system_prompt = [{"role": "system", "content": system_prompt}]
 
                 history = [
                     *system_prompt,
@@ -55,14 +56,15 @@ class GPTClient(interface.ILLMClient):
                     ]
 
                 response = await self.client.chat.completions.create(
-                    model=_model,
+                    model=llm_model,
                     messages=history,
                     temperature=temperature,
                 )
                 llm_response = response.choices[0].message.content
 
                 span.set_status(Status(StatusCode.OK))
-                return str(llm_response).replace("#", "").replace("*", "")
+                return llm_response
+
             except Exception as err:
                 span.record_exception(err)
                 span.set_status(Status(StatusCode.ERROR, str(err)))

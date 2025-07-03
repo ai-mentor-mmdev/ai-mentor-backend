@@ -8,8 +8,8 @@ class ILLMClient(Protocol):
     async def generate(
             self,
             history: list[model.EduMessage],
-            system_prompt: str,
-            temperature: float,
-            _model: str = "gpt-4o-mini",
+            system_prompt: str = "",
+            temperature: float = 0.5,
+            llm_model: str = "gpt-4o-mini",
             base64img: str = None
     ) -> str: pass

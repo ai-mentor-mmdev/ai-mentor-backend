@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime
 
 
@@ -9,8 +9,8 @@ class Student:
     login: str
     password: str
 
-    created_at: datetime
-    updated_at: datetime
+    created_at: datetime = field(default_factory=datetime.now)
+    updated_at: datetime = field(default_factory=datetime.now)
 
     @classmethod
     def serialize(cls, rows) -> list:
@@ -39,8 +39,8 @@ class EduProgress:
     current_block_id: int
     current_chapter_id: int
 
-    created_at: datetime
-    updated_at: datetime
+    created_at: datetime = field(default_factory=datetime.now)
+    updated_at: datetime = field(default_factory=datetime.now)
 
     @classmethod
     def serialize(cls, rows) -> list:
@@ -69,8 +69,8 @@ class Topic:
     intro: str
     edu_plan: str
 
-    created_at: datetime
-    updated_at: datetime
+    created_at: datetime = field(default_factory=datetime.now)
+    updated_at: datetime = field(default_factory=datetime.now)
 
     @classmethod
     def serialize(cls, rows) -> list:
@@ -95,8 +95,8 @@ class Block:
     name: str
     content: str
 
-    created_at: datetime
-    updated_at: datetime
+    created_at: datetime = field(default_factory=datetime.now)
+    updated_at: datetime = field(default_factory=datetime.now)
 
     @classmethod
     def serialize(cls, rows) -> list:
@@ -122,8 +122,8 @@ class Chapter:
     name: str
     content: str
 
-    created_at: datetime
-    updated_at: datetime
+    created_at: datetime = field(default_factory=datetime.now)
+    updated_at: datetime = field(default_factory=datetime.now)
 
     @classmethod
     def serialize(cls, rows) -> list:
@@ -147,8 +147,8 @@ class EduChat:
 
     student_id: int
 
-    created_at: datetime
-    updated_at: datetime
+    created_at: datetime = field(default_factory=datetime.now)
+    updated_at: datetime = field(default_factory=datetime.now)
 
     @classmethod
     def serialize(cls, rows) -> list:
@@ -169,8 +169,8 @@ class EduMessage:
     edu_chat_id: int
     text: str
     role: str
-    created_at: datetime
-    updated_at: datetime
+    created_at: datetime = field(default_factory=datetime.now)
+    updated_at: datetime = field(default_factory=datetime.now)
 
     @classmethod
     def serialize(cls, rows) -> list:
