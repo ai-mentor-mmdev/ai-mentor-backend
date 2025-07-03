@@ -155,6 +155,7 @@ class EduMessage:
     id: int
     edu_chat_id: int
     text: str
+    role: str
     created_at: datetime
     updated_at: datetime
 
@@ -165,6 +166,7 @@ class EduMessage:
                 id=row.id,
                 edu_chat_id=row.edu_chat_id,
                 text=row.text,
+                role=row.role,
                 created_at=row.created_at,
                 updated_at=row.updated_at,
             )

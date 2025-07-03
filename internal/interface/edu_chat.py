@@ -40,7 +40,7 @@ class IEduChatRepo(Protocol):
     async def create_chat(self, account_id: int) -> int: pass
 
     @abstractmethod
-    async def create_message(self, edu_chat_id: int, text: str) -> int: pass
+    async def create_message(self, edu_chat_id: int, text: str, role: str) -> int: pass
 
     @abstractmethod
     async def get_messages_by_chat_id(self, edu_chat_id: int) -> list[model.EduMessage]: pass

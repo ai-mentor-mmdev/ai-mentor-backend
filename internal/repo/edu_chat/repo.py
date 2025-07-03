@@ -54,17 +54,18 @@ class EduChatRepo(interface.IEduChatRepo):
                 span.set_status(Status(StatusCode.ERROR, str(err)))
                 raise err
 
-    async def create_message(self, edu_chat_id: int, text: str) -> int:
+    async def create_message(self, edu_chat_id: int, text: str, role: str) -> int:
         with self.tracer.start_as_current_span(
                 "EduChatRepo.create_message",
                 kind=SpanKind.INTERNAL,
                 attributes={
                     "edu_chat_id": edu_chat_id,
-                    "text": text
+                    "text": text,
+                    "role": role
                 }
         ) as span:
             try:
-                args = {"edu_chat_id": edu_chat_id, "text": text}
+                args = {"edu_chat_id": edu_chat_id, "text": text, "role": role}
                 message_id = await self.db.insert(create_edu_message, args)
 
                 span.set_status(Status(StatusCode.OK))

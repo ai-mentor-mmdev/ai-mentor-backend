@@ -29,16 +29,10 @@ class EduChatService(interface.IEduChatService):
             try:
                 edu_chat_id = await self.get_or_create_chat(account_id)
 
-                # Сохраняем сообщение пользователя
-                await self.create_message(edu_chat_id, f"USER: {text}")
-
-                # Получаем историю сообщений
+                await self.edu_chat_repo.create_message(edu_chat_id, text, "user")
                 messages = await self.edu_chat_repo.get_messages_by_chat_id(edu_chat_id)
-
-                # Получаем системный промпт
                 system_prompt = await self.edu_prompt_service.get_interview_expert_prompt(account_id)
 
-                # Отправляем в LLM
                 llm_response = await self.llm_client.generate(
                     self._convert_messages_to_llm_format(messages),
                     system_prompt,
@@ -177,25 +171,3 @@ class EduChatService(interface.IEduChatService):
                 span.set_status(Status(StatusCode.ERROR, str(err)))
                 raise err
 
-    def _convert_messages_to_llm_format(self, messages: list[model.EduMessage]) -> list[model.Message]:
-        """Конвертируем сообщения в формат для LLM"""
-        llm_messages = []
-        for msg in messages:
-            if msg.text.startswith("USER: "):
-                role = "user"
-                content = msg.text[6:]  # Убираем "USER: "
-            elif msg.text.startswith("ASSISTANT: "):
-                role = "assistant"
-                content = msg.text[11:]  # Убираем "ASSISTANT: "
-            else:
-                continue
-
-            llm_messages.append(model.Message(
-                id=msg.id,
-                chat_id=str(msg.edu_chat_id),
-                role=role,
-                text=content,
-                created_at=msg.created_at
-            ))
-
-        return llm_messages

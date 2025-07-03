@@ -10,8 +10,8 @@ WHERE account_id = :account_id;
 """
 
 create_edu_message = """
-INSERT INTO edu_messages (edu_chat_id, text)
-VALUES (:edu_chat_id, :text)
+INSERT INTO edu_messages (edu_chat_id, text, role)
+VALUES (:edu_chat_id, :text, :role)
 RETURNING id;
 """
 
