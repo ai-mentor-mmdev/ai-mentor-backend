@@ -24,3 +24,9 @@ class EduProgressAction:
     start_topic = "EDU_START_TOPIC"
     start_block = "EDU_START_BLOCK"
     start_chapter = "EDU_START_CHAPTER"
+
+class Roles:
+    """Роли в системе чата"""
+    user = "user"
+    assistant = "assistant"
+    system = "system"
