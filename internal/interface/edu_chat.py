@@ -16,7 +16,14 @@ class IEduChatController(Protocol):
 
 
 class IEduChatService(Protocol):
-    pass
+    @abstractmethod
+    async def send_message_to_interview_expert(self, chat_id: int, text: str): pass
+
+    @abstractmethod
+    async def send_message_to_teacher(self, chat_id: int, text: str): pass
+
+    @abstractmethod
+    async def send_message_to_test_expert(self, chat_id: int, text: str): pass
 
 
 class IEduPromptService(Protocol):
@@ -31,4 +38,21 @@ class IEduPromptService(Protocol):
 
 
 class IEduChatRepo(Protocol):
-    pass
+    @abstractmethod
+    async def create_chat(self, account_id: int) -> int:
+        pass
+
+    @abstractmethod
+    async def get_chat_by_account_id(self, account_id: int) -> model.EduChat:
+        pass
+
+    @abstractmethod
+    async def get_chat_by_id(self, chat_id: int) -> model.EduChat:
+        pass
+
+    @abstractmethod
+    async def add_message(self, edu_chat_id: int, text: str, role: str) -> int:
+        pass
+
+    @abstractmethod
+    async def get_messages_by_chat_id(self, edu_chat_id: int, limit: int = 50) -> list[model.EduMessage]: pass
