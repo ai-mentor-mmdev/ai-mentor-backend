@@ -19,7 +19,6 @@ sqlite3
 asyncio
 
 # Email Validation
-email-validator==2.1.0
 pydantic[email]
 
 # Development Dependencies (optional)
