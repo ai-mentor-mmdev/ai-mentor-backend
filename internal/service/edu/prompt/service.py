@@ -216,24 +216,25 @@ class EduPromptService(interface.IEduPromptService):
                 span.set_status(Status(StatusCode.ERROR, str(err)))
                 raise err
 
-    async def _get_student_context(self, account_id: int) -> str:
+    async def _get_student_context(self, student_id: int) -> str:
         """Получает полный контекст студента для формирования промпта"""
         try:
             # Получаем прогресс студента
-            progress = await self.edu_progress_repo.get_progress_by_account_id(account_id)
-            current_topic = await self.edu_progress_repo.get_current_topic(account_id)
-            current_block = await self.edu_progress_repo.get_current_block(account_id)
-            current_chapter = await self.edu_progress_repo.get_current_chapter(account_id)
+            progress = (await self.edu_progress_repo.get_progress_by_account_id(student_id))[0]
+
+            current_topic_id = await self.edu_progress_repo.get_current_topic_id(progress.id)
+            current_block_id = await self.edu_progress_repo.get_current_block_id(progress.id)
+            current_chapter_id = await self.edu_progress_repo.get_current_chapter_id(progress.id)
+
+            current_topic = await self.topic_repo.get_topic_by_id(current_topic_id)
+            current_block = await self.topic_repo.get_block_by_id(current_topic_id)
+            current_chapter = await self.topic_repo.get_chapter_by_id(current_topic_id)
 
             # Получаем доступные темы, блоки и главы
-            available_topics = await self.edu_progress_repo.get_available_topics(account_id)
-            available_blocks = await self.edu_progress_repo.get_available_blocks(account_id)
-            available_chapters = await self.edu_progress_repo.get_available_chapters(account_id)
+            approved_topics = await self.edu_progress_repo.get_approved_topic_ids(progress.id)
+            approved_blocks = await self.edu_progress_repo.get_approved_block_ids(progress.id)
+            approved_chapters = await self.edu_progress_repo.get_approved_chapter_ids(progress.id)
 
-            # Получаем пройденные материалы
-            completed_topics = await self.edu_progress_repo.get_completed_topics(account_id)
-            completed_blocks = await self.edu_progress_repo.get_completed_blocks(account_id)
-            completed_chapters = await self.edu_progress_repo.get_completed_chapters(account_id)
 
             context = f"""
 ТЕКУЩЕЕ СОСТОЯНИЕ СТУДЕНТА:
