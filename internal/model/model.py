@@ -5,8 +5,10 @@ from datetime import datetime
 @dataclass
 class Student:
     id: int
+
     login: str
     password: str
+
     created_at: datetime
     updated_at: datetime
 
@@ -27,7 +29,7 @@ class Student:
 @dataclass
 class EduProgress:
     id: int
-    account_id: int
+    student_id: int
 
     approved_topic_ids: list[int]
     approved_block_ids: list[int]
@@ -45,7 +47,7 @@ class EduProgress:
         return [
             cls(
                 id=row.id,
-                account_id=row.account_id,
+                student_id=row.student_id,
                 approved_topic_ids=row.approved_topic_ids or [],
                 approved_block_ids=row.approved_block_ids or [],
                 approved_chapter_ids=row.approved_chapter_ids or [],
@@ -62,9 +64,11 @@ class EduProgress:
 @dataclass
 class Topic:
     id: int
+
     name: str
     intro: str
     edu_plan: str
+
     created_at: datetime
     updated_at: datetime
 
@@ -87,8 +91,10 @@ class Topic:
 class Block:
     id: int
     topic_id: int
+
     name: str
     content: str
+
     created_at: datetime
     updated_at: datetime
 
@@ -112,8 +118,10 @@ class Chapter:
     id: int
     topic_id: int
     block_id: int
+
     name: str
     content: str
+
     created_at: datetime
     updated_at: datetime
 
@@ -136,7 +144,9 @@ class Chapter:
 @dataclass
 class EduChat:
     id: int
-    account_id: int
+
+    student_id: int
+
     created_at: datetime
     updated_at: datetime
 
@@ -145,7 +155,7 @@ class EduChat:
         return [
             cls(
                 id=row.id,
-                account_id=row.account_id,
+                student_id=row.student_id,
                 created_at=row.created_at,
                 updated_at=row.updated_at,
             )

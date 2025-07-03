@@ -21,29 +21,21 @@ class EduChatService(interface.IEduChatService):
         self.llm_client = llm_client
         self.edu_prompt_service = edu_prompt_service
 
-    async def send_message_to_interview_expert(self, account_id: int, text: str) -> str:
+    async def send_message_to_interview_expert(self, student_id: int, text: str) -> str:
         with self.tracer.start_as_current_span(
                 "EduChatService.send_message_to_interview_expert",
                 kind=SpanKind.INTERNAL,
                 attributes={
-                    "account_id": account_id,
+                    "student_id": student_id,
                     "text": text,
                 }
         ) as span:
             try:
-                # Получаем или создаем чат для студента
-                chat = await self._get_or_create_chat(account_id)
-
-                # Добавляем сообщение пользователя
+                chat = await self._get_or_create_chat(student_id)
                 await self.edu_chat_repo.add_message(chat.id, text, common.Roles.user)
-
-                # Получаем историю сообщений
                 messages = await self.edu_chat_repo.get_messages_by_chat_id(chat.id)
+                system_prompt = await self.edu_prompt_service.get_interview_expert_prompt(student_id)
 
-                # Получаем системный промпт для эксперта по интервью
-                system_prompt = await self.edu_prompt_service.get_interview_expert_prompt(account_id)
-
-                # Генерируем ответ от LLM
                 llm_response = await self.llm_client.generate(
                     messages,
                     system_prompt,
@@ -162,22 +154,22 @@ class EduChatService(interface.IEduChatService):
                 span.set_status(Status(StatusCode.ERROR, str(err)))
                 raise err
 
-    async def _get_or_create_chat(self, account_id: int) -> model.EduChat:
+    async def _get_or_create_chat(self, student_id: int) -> model.EduChat:
         """Получает существующий чат или создает новый для студента"""
         with self.tracer.start_as_current_span(
                 "EduChatService._get_or_create_chat",
                 kind=SpanKind.INTERNAL,
                 attributes={
-                    "account_id": account_id
+                    "student_id": student_id
                 }
         ) as span:
             try:
                 # Пытаемся получить существующий чат
-                chat = await self.edu_chat_repo.get_chat_by_account_id(account_id)
+                chat = await self.edu_chat_repo.get_chat_by_student_id(student_id)
 
                 if chat is None:
                     # Создаем новый чат если его нет
-                    chat_id = await self.edu_chat_repo.create_chat(account_id)
+                    chat_id = await self.edu_chat_repo.create_chat(student_id)
                     chat = await self.edu_chat_repo.get_chat_by_id(chat_id)
 
                     span.set_attribute("chat_created", True)

@@ -6,11 +6,7 @@ from internal import model
 
 class IEduProgressRepo(Protocol):
     @abstractmethod
-    async def get_progress_by_account_id(self, account_id: int) -> list[model.EduProgress]:
-        pass
-
-    @abstractmethod
-    async def get_progress_by_chat_id(self, edu_chat_id: int) -> list[model.EduProgress]:
+    async def get_progress_by_student_id(self, student_id: int) -> list[model.EduProgress]:
         pass
 
     @abstractmethod

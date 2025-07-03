@@ -17,37 +17,37 @@ class IEduChatController(Protocol):
 
 class IEduChatService(Protocol):
     @abstractmethod
-    async def send_message_to_interview_expert(self, chat_id: int, text: str): pass
+    async def send_message_to_interview_expert(self, student_id: int, text: str): pass
 
     @abstractmethod
-    async def send_message_to_teacher(self, chat_id: int, text: str): pass
+    async def send_message_to_teacher(self, student_id: int, text: str): pass
 
     @abstractmethod
-    async def send_message_to_test_expert(self, chat_id: int, text: str): pass
+    async def send_message_to_test_expert(self, student_id: int, text: str): pass
 
 
 class IEduPromptService(Protocol):
     @abstractmethod
-    async def get_interview_expert_prompt(self, account_id: int) -> str: pass
+    async def get_interview_expert_prompt(self, student_id: int) -> str: pass
 
     @abstractmethod
-    async def get_teacher_prompt(self, account_id: int) -> str: pass
+    async def get_teacher_prompt(self, student_id: int) -> str: pass
 
     @abstractmethod
-    async def get_test_expert_prompt(self, account_id: int) -> str: pass
+    async def get_test_expert_prompt(self, student_id: int) -> str: pass
 
 
 class IEduChatRepo(Protocol):
     @abstractmethod
-    async def create_chat(self, account_id: int) -> int:
+    async def create_chat(self, student_id: int) -> int:
         pass
 
     @abstractmethod
-    async def get_chat_by_account_id(self, account_id: int) -> model.EduChat:
+    async def get_chat_by_student_id(self, student_id: int) -> list[model.EduChat]:
         pass
 
     @abstractmethod
-    async def get_chat_by_id(self, chat_id: int) -> model.EduChat:
+    async def get_chat_by_id(self, chat_id: int) -> list[model.EduChat]:
         pass
 
     @abstractmethod
