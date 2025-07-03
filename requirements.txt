@@ -20,6 +20,7 @@ asyncio
 
 # Email Validation
 email-validator==2.1.0
+pydantic[email]
 
 # Development Dependencies (optional)
 pytest==7.4.3
