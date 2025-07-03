@@ -7,7 +7,7 @@
 
 # Настройки
 PYTHON = python3
-PIP = pip3
+PIP = pip
 VENV = venv
 BACKEND_HOST = 0.0.0.0
 BACKEND_PORT = 8000
