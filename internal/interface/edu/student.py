@@ -5,7 +5,7 @@ from internal import model
 
 class IStudentRepo(Protocol):
     @abstractmethod
-    async def create(self, student: model.Student) -> int:
+    async def create_student(self, student: model.Student) -> int:
         """Создает нового студента и возвращает его ID"""
         pass
 

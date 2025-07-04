@@ -15,14 +15,10 @@ class StudentRepo(interface.IStudentRepo):
         self.tracer = tel.tracer()
         self.logger = tel.logger()
 
-    async def create(self, student: model.Student) -> int:
+    async def create_student(self, student: model.Student) -> int:
         with self.tracer.start_as_current_span(
                 "StudentRepo.create",
                 kind=SpanKind.INTERNAL,
-                attributes={
-                    "account_id": student.account_id,
-                    "login": student.login
-                }
         ) as span:
             try:
                 params = self._student_to_db_params(student)
