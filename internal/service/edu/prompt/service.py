@@ -8,10 +8,8 @@ class EduPromptService(interface.IEduPromptService):
             self,
             tel: interface.ITelemetry,
             topic_repo: interface.ITopicRepo,
-            edu_progress_repo: interface.IEduProgressRepo
     ):
         self.tracer = tel.tracer()
-        self.edu_progress_repo = edu_progress_repo
         self.topic_repo = topic_repo
 
     async def get_interview_expert_prompt(self, account_id: int) -> str:
