@@ -7,6 +7,8 @@ class Student:
     id: int
     account_id: int
 
+    current_expert: str = None
+
     # Состояние интервью
     # WELCOME, BACKGROUND, GOALS, PREFERENCES, ASSESSMENT, PLAN_GENERATION, COMPLETE
     interview_stage: str = "WELCOME"
