@@ -1,6 +1,4 @@
 import json
-import logging
-from typing import Optional, Dict, Any
 from opentelemetry.trace import Status, StatusCode, SpanKind
 
 from internal import interface, model
@@ -40,7 +38,7 @@ class StudentRepo(interface.IStudentRepo):
                 self.logger.error(f"Ошибка создания студента: {err}")
                 raise err
 
-    async def get_by_id(self, student_id: int) -> Optional[model.Student]:
+    async def get_by_id(self, student_id: int) -> list[model.Student] :
         with self.tracer.start_as_current_span(
                 "StudentRepo.get_by_id",
                 kind=SpanKind.INTERNAL,
@@ -51,11 +49,11 @@ class StudentRepo(interface.IStudentRepo):
 
                 if not rows:
                     span.set_status(Status(StatusCode.OK))
-                    return None
+                    return []
 
                 students = model.Student.serialize(rows)
                 span.set_status(Status(StatusCode.OK))
-                return students[0] if students else None
+                return students[0] if students else []
 
             except Exception as err:
                 span.record_exception(err)
@@ -63,7 +61,7 @@ class StudentRepo(interface.IStudentRepo):
                 self.logger.error(f"Ошибка получения студента по ID {student_id}: {err}")
                 raise err
 
-    async def get_by_account_id(self, account_id: int) -> Optional[model.Student]:
+    async def get_by_account_id(self, account_id: int) -> list[model.Student]:
         with self.tracer.start_as_current_span(
                 "StudentRepo.get_by_account_id",
                 kind=SpanKind.INTERNAL,
@@ -74,11 +72,11 @@ class StudentRepo(interface.IStudentRepo):
 
                 if not rows:
                     span.set_status(Status(StatusCode.OK))
-                    return None
+                    return []
 
                 students = model.Student.serialize(rows)
                 span.set_status(Status(StatusCode.OK))
-                return students[0] if students else None
+                return students[0] if students else []
 
             except Exception as err:
                 span.record_exception(err)
@@ -110,48 +108,6 @@ class StudentRepo(interface.IStudentRepo):
                 self.logger.error(f"Ошибка обновления студента {student.id}: {err}")
                 raise err
 
-    async def update_profile_fields(self, student_id: int, updates: dict) -> None:
-        with self.tracer.start_as_current_span(
-                "StudentRepo.update_profile_fields",
-                kind=SpanKind.INTERNAL,
-                attributes={
-                    "student_id": student_id,
-                    "fields_count": len(updates)
-                }
-        ) as span:
-            try:
-                if not updates:
-                    span.set_status(Status(StatusCode.OK))
-                    return
-
-                # Формируем динамический запрос для обновления только нужных полей
-                set_clauses = []
-                params = {"student_id": student_id}
-
-                for field, value in updates.items():
-                    if hasattr(model.Student, field):
-                        set_clauses.append(f"{field} = :{field}")
-                        params[field] = self._serialize_field_value(value)
-
-                if not set_clauses:
-                    span.set_status(Status(StatusCode.OK))
-                    return
-
-                query = UPDATE_PROFILE_FIELDS_QUERY.format(
-                    fields_to_update=", ".join(set_clauses)
-                )
-
-                await self.db.update(query, params)
-
-                span.set_status(Status(StatusCode.OK))
-                self.logger.info(f"Обновлены поля профиля студента {student_id}: {list(updates.keys())}")
-
-            except Exception as err:
-                span.record_exception(err)
-                span.set_status(Status(StatusCode.ERROR, str(err)))
-                self.logger.error(f"Ошибка обновления полей профиля студента {student_id}: {err}")
-                raise err
-
     async def set_interview_stage(self, student_id: int, stage: str) -> None:
         with self.tracer.start_as_current_span(
                 "StudentRepo.set_interview_stage",
@@ -174,29 +130,6 @@ class StudentRepo(interface.IStudentRepo):
                 span.record_exception(err)
                 span.set_status(Status(StatusCode.ERROR, str(err)))
                 self.logger.error(f"Ошибка установки этапа интервью для студента {student_id}: {err}")
-                raise err
-
-    async def is_interview_completed(self, student_id: int) -> bool:
-        with self.tracer.start_as_current_span(
-                "StudentRepo.is_interview_completed",
-                kind=SpanKind.INTERNAL,
-                attributes={"student_id": student_id}
-        ) as span:
-            try:
-                rows = await self.db.select(CHECK_INTERVIEW_COMPLETED_QUERY, {"student_id": student_id})
-
-                if not rows:
-                    span.set_status(Status(StatusCode.OK))
-                    return False
-
-                result = bool(rows[0].interview_completed) if rows[0].interview_completed is not None else False
-                span.set_status(Status(StatusCode.OK))
-                return result
-
-            except Exception as err:
-                span.record_exception(err)
-                span.set_status(Status(StatusCode.ERROR, str(err)))
-                self.logger.error(f"Ошибка проверки завершения интервью для студента {student_id}: {err}")
                 raise err
 
     def _student_to_db_params(self, student: model.Student) -> Dict[str, Any]:

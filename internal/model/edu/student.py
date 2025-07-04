@@ -1,6 +1,5 @@
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import List, Dict, Optional
 
 
 @dataclass
@@ -8,76 +7,74 @@ class Student:
     id: int
     account_id: int
 
-    login: str
-    password: str
-
     # Состояние интервью
-    interview_stage: str = "WELCOME"  # WELCOME, BACKGROUND, GOALS, PREFERENCES, ASSESSMENT, PLAN_GENERATION, COMPLETE
+    # WELCOME, BACKGROUND, GOALS, PREFERENCES, ASSESSMENT, PLAN_GENERATION, COMPLETE
+    interview_stage: str = "WELCOME"
     interview_completed: bool = False
 
     # Бэкграунд
-    programming_experience: Optional[str] = None  # "beginner", "intermediate", "advanced"
-    known_languages: List[str] = field(default_factory=list)
-    work_experience: Optional[str] = None
-    education_background: Optional[str] = None
+    # "beginner", "intermediate", "advanced"
+    programming_experience: str = None
+    known_languages: list[str] = field(default_factory=list)
+    work_experience: str = None
+    education_background: str = None
 
     # Цели
-    learning_goals: List[str] = field(default_factory=list)
-    career_goals: Optional[str] = None
-    timeline: Optional[str] = None  # "1 month", "3 months", "6 months", etc.
+    learning_goals: list[str] = field(default_factory=list)
+    career_goals: str = None
+    # "1 month", "3 months", "6 months", etc.
+    timeline: str = None
 
     # Предпочтения
-    learning_style: Optional[str] = None  # "visual", "hands-on", "reading", "mixed"
-    time_availability: Optional[str] = None  # "1-2 hours/day", "weekends only", etc.
-    preferred_difficulty: Optional[str] = None  # "gradual", "challenging", "mixed"
+    # "visual", "hands-on", "reading", "mixed"
+    learning_style: str = None
+    # "1-2 hours/day", "weekends only", etc.
+    time_availability: str = None
+    # "gradual", "challenging", "mixed"
+    preferred_difficulty: str = None
 
     # Адаптация контента
-    skip_topics: Dict[int, str] = field(default_factory=dict)  # {id: name} темы, которые можно пропустить
-    skip_blocks: Dict[int, str] = field(default_factory=dict)  # {id: name} блоки, которые можно пропустить
-    focus_areas: List[str] = field(default_factory=list)  # Области для углубленного изучения
+    # {id: name} темы, которые можно пропустить
+    skip_topics: dict[int, str] = field(default_factory=dict)
+    # {id: name} блоки, которые можно пропустить
+    skip_blocks: dict[int, str] = field(default_factory=dict)
+    focus_areas: list[str] = field(default_factory=list)  # Области для углубленного изучения
 
-    recommended_topics: Dict[int, str] = field(default_factory=dict)  # {id: name} тем в порядке изучения
-    recommended_blocks: Dict[int, str] = field(default_factory=dict)  # {id: name} блоков в порядке изучения
+    # {id: name} тем в порядке изучения
+    recommended_topics: dict[int, str] = field(default_factory=dict)
+    # {id: name} блоков в порядке изучения
+    recommended_blocks: dict[int, str] = field(default_factory=dict)
 
-    approved_topics: Dict[int, str] = field(default_factory=dict)  # {id: name} тем, которые уже изучены
-    approved_blocks: Dict[int, str] = field(default_factory=dict)  # {id: name} блоков, которые уже изучены
-    approved_chapters: Dict[int, str] = field(default_factory=dict)  # {id: name} глав, которые уже изучены
+    # {id: name} тем, которые уже изучены
+    approved_topics: dict[int, str] = field(default_factory=dict)
+    # {id: name} блоков, которые уже изучены
+    approved_blocks: dict[int, str] = field(default_factory=dict)
+    # {id: name} глав, которые уже изучены
+    approved_chapters: dict[int, str] = field(default_factory=dict)
 
     # Оценка уровня
-    assessment_score: Optional[int] = None  # 0-100
-    strong_areas: List[str] = field(default_factory=list)
-    weak_areas: List[str] = field(default_factory=list)
+    # 0-100
+    assessment_score: int = None
+    strong_areas: list[str] = field(default_factory=list)
+    weak_areas: list[str] = field(default_factory=list)
 
     # Персональный план обучения
-    learning_path: List[Dict] = field(default_factory=list)  # Детальный план обучения
-    current_topic_id: Optional[int] = None
-    current_block_id: Optional[int] = None
-    current_chapter_id: Optional[int] = None
+    # Детальный план обучения
+    learning_path: list[dict] = field(default_factory=list)
+    current_topic_id: int = None
+    current_block_id: int = None
+    current_chapter_id: int = None
 
     created_at: datetime = field(default_factory=datetime.now)
     updated_at: datetime = field(default_factory=datetime.now)
 
-    @classmethod
-    def create_new(cls, account_id: int, login: str, password: str) -> 'Student':
-        """Создает нового студента с базовыми настройками"""
-        return cls(
-            id=0,  # Будет установлен при сохранении в БД
-            account_id=account_id,
-            login=login,
-            password=password,
-            interview_stage="WELCOME",
-            interview_completed=False
-        )
-
     def update_from_dict(self, updates: dict) -> None:
-        """Обновляет поля студента из словаря"""
         for field_name, value in updates.items():
             if value is not None and hasattr(self, field_name):
                 setattr(self, field_name, value)
         self.updated_at = datetime.now()
 
     def is_ready_for_learning(self) -> bool:
-        """Проверяет, готов ли студент к обучению"""
         return (
                 self.interview_completed and
                 self.programming_experience is not None and
@@ -86,7 +83,6 @@ class Student:
         )
 
     def get_profile_completion_percentage(self) -> int:
-        """Возвращает процент заполненности профиля"""
         total_fields = 12
         filled_fields = 0
 
@@ -110,7 +106,7 @@ class Student:
         return int((filled_fields / total_fields) * 100)
 
     @classmethod
-    def serialize(cls, rows) -> List['Student']:
+    def serialize(cls, rows) -> list['Student']:
         """Сериализация из результатов БД"""
         return [
             cls(

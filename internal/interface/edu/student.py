@@ -10,12 +10,12 @@ class IStudentRepo(Protocol):
         pass
 
     @abstractmethod
-    async def get_by_id(self, student_id: int) -> Optional[model.Student]:
+    async def get_by_id(self, student_id: int) -> list[model.Student]:
         """Получает студента по ID"""
         pass
 
     @abstractmethod
-    async def get_by_account_id(self, account_id: int) -> Optional[model.Student]:
+    async def get_by_account_id(self, account_id: int) -> list[model.Student]:
         """Получает студента по account_id"""
         pass
 
@@ -25,18 +25,8 @@ class IStudentRepo(Protocol):
         pass
 
     @abstractmethod
-    async def update_profile_fields(self, student_id: int, updates: dict) -> None:
-        """Обновляет отдельные поля профиля студента"""
-        pass
-
-    @abstractmethod
     async def set_interview_stage(self, student_id: int, stage: str) -> None:
         """Устанавливает текущий этап интервью"""
-        pass
-
-    @abstractmethod
-    async def is_interview_completed(self, student_id: int) -> bool:
-        """Проверяет, завершено ли интервью"""
         pass
 
 
