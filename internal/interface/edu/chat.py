@@ -36,6 +36,12 @@ class IEduPromptService(Protocol):
     @abstractmethod
     async def get_test_expert_prompt(self, student_id: int) -> str: pass
 
+    @abstractmethod
+    async def get_dialogue_analysis_prompt(self, dialogue_history: list[model.EduMessage]) -> str: pass
+
+    @abstractmethod
+    async def get_plan_generation_prompt(self, student_profile: dict, available_topics: list[model.Topic]) -> str: pass
+
 
 class IEduChatRepo(Protocol):
         pass

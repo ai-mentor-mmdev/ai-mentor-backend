@@ -1,4 +1,4 @@
-from internal.interface.edu.progress import *
+from internal.interface.edu.student import *
 from internal.interface.edu.chat import *
 from internal.interface.edu.topic import *
 from internal.interface.general import *
