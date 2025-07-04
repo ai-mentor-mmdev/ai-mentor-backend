@@ -56,5 +56,3 @@ class IEduProgressRepo(Protocol):
     @abstractmethod
     async def mark_chapter_completed(self, account_id: int, chapter_id: int):
         pass
-
-

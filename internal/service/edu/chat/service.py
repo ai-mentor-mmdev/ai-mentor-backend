@@ -31,7 +31,7 @@ class EduChatService(interface.IEduChatService):
                 }
         ) as span:
             try:
-                chat = await self._get_or_create_chat(student_id)
+                chat = await self._get_or_create_edu_chat(student_id)
                 await self.edu_chat_repo.add_message(chat.id, text, common.Roles.user)
                 messages = await self.edu_chat_repo.get_messages_by_chat_id(chat.id)
                 system_prompt = await self.edu_prompt_service.get_interview_expert_prompt(student_id)
@@ -71,7 +71,7 @@ class EduChatService(interface.IEduChatService):
         ) as span:
             try:
                 # Получаем или создаем чат для студента
-                chat = await self._get_or_create_chat(account_id)
+                chat = await self._get_or_create_edu_chat(account_id)
 
                 # Добавляем сообщение пользователя
                 await self.edu_chat_repo.add_message(chat.id, text, common.Roles.user)
@@ -118,7 +118,7 @@ class EduChatService(interface.IEduChatService):
         ) as span:
             try:
                 # Получаем или создаем чат для студента
-                chat = await self._get_or_create_chat(account_id)
+                chat = await self._get_or_create_edu_chat(account_id)
 
                 # Добавляем сообщение пользователя
                 await self.edu_chat_repo.add_message(chat.id, text, common.Roles.user)
@@ -154,7 +154,7 @@ class EduChatService(interface.IEduChatService):
                 span.set_status(Status(StatusCode.ERROR, str(err)))
                 raise err
 
-    async def _get_or_create_chat(self, student_id: int) -> model.EduChat:
+    async def _get_or_create_edu_chat(self, student_id: int) -> model.EduChat:
         """Получает существующий чат или создает новый для студента"""
         with self.tracer.start_as_current_span(
                 "EduChatService._get_or_create_chat",
@@ -208,9 +208,9 @@ class EduChatService(interface.IEduChatService):
                     common.EduNavigationCommand.to_topic,
                     common.EduNavigationCommand.to_block,
                     common.EduNavigationCommand.to_chapter,
-                    common.EduNavigationCommand.show_topics,
-                    common.EduNavigationCommand.show_blocks,
-                    common.EduNavigationCommand.show_chapters,
+                    common.EduNavigationCommand.show_approved_topics,
+                    common.EduNavigationCommand.show_approved_blocks,
+                    common.EduNavigationCommand.show_approved_chapters,
                     common.EduNavigationCommand.show_progress,
                 ]
 

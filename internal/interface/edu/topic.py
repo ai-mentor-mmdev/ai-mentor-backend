@@ -1,5 +1,5 @@
 from abc import abstractmethod
-from typing import Protocol, Optional, List
+from typing import Protocol
 from internal import model
 
 
@@ -9,11 +9,11 @@ class ITopicRepo(Protocol):
         pass
 
     @abstractmethod
-    async def get_topic_by_id(self, topic_id: int) -> Optional[model.Topic]:
+    async def get_topic_by_id(self, topic_id: int) -> list[model.Topic]:
         pass
 
     @abstractmethod
-    async def get_all_topics(self) -> List[model.Topic]:
+    async def get_all_topics(self) -> list[model.Topic]:
         pass
 
     @abstractmethod
@@ -30,11 +30,11 @@ class ITopicRepo(Protocol):
         pass
 
     @abstractmethod
-    async def get_block_by_id(self, block_id: int) -> Optional[model.Block]:
+    async def get_block_by_id(self, block_id: int) -> list[model.Block]:
         pass
 
     @abstractmethod
-    async def get_blocks_by_topic_id(self, topic_id: int) -> List[model.Block]:
+    async def get_blocks_by_topic_id(self, topic_id: int) -> list[model.Block]:
         pass
 
     @abstractmethod
@@ -51,15 +51,15 @@ class ITopicRepo(Protocol):
         pass
 
     @abstractmethod
-    async def get_chapter_by_id(self, chapter_id: int) -> Optional[model.Chapter]:
+    async def get_chapter_by_id(self, chapter_id: int) -> list[model.Chapter]:
         pass
 
     @abstractmethod
-    async def get_chapters_by_block_id(self, block_id: int) -> List[model.Chapter]:
+    async def get_chapters_by_block_id(self, block_id: int) -> list[model.Chapter]:
         pass
 
     @abstractmethod
-    async def get_chapters_by_topic_id(self, topic_id: int) -> List[model.Chapter]:
+    async def get_chapters_by_topic_id(self, topic_id: int) -> list[model.Chapter]:
         pass
 
     @abstractmethod

@@ -3,9 +3,9 @@ class EduNavigationCommand:
     to_topic = "EDU_NAVIGATE_TO_TOPIC"
     to_block = "EDU_NAVIGATE_TO_BLOCK"
     to_chapter = "EDU_NAVIGATE_TO_CHAPTER"
-    show_topics = "EDU_SHOW_TOPICS"
-    show_blocks = "EDU_SHOW_BLOCKS"
-    show_chapters = "EDU_SHOW_CHAPTERS"
+    show_approved_topics = "EDU_SHOW_APPROVED_TOPICS"
+    show_approved_blocks = "EDU_SHOW_APPROVED_BLOCKS"
+    show_approved_chapters = "EDU_SHOW_APPROVED_CHAPTERS"
     show_progress = "EDU_SHOW_PROGRESS"
 
 

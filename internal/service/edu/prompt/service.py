@@ -1,19 +1,18 @@
 from opentelemetry.trace import Status, StatusCode, SpanKind
 from internal import interface
 from internal import common
-from typing import Optional, List, Dict, Any
-import json
-import re
 
 
 class EduPromptService(interface.IEduPromptService):
     def __init__(
             self,
             tel: interface.ITelemetry,
+            topic_repo: interface.ITopicRepo,
             edu_progress_repo: interface.IEduProgressRepo
     ):
         self.tracer = tel.tracer()
         self.edu_progress_repo = edu_progress_repo
+        self.topic_repo = topic_repo
 
     async def get_interview_expert_prompt(self, account_id: int) -> str:
         with self.tracer.start_as_current_span(
@@ -25,27 +24,25 @@ class EduPromptService(interface.IEduPromptService):
         ) as span:
             try:
                 # Получаем полный контекст студента
-                context = await self._get_student_context(account_id)
+                student_context = await self._get_student_context(account_id)
 
                 prompt = f"""
 КТО ТЫ:
 Ты эксперт по проведению интервью и профессиональному развитию в системе образовательных ИИ-экспертов. 
 В системе есть следующие эксперты:
+- Эксперт по интервью (ты)
 - Преподаватель (объясняет материал)
 - Эксперт по тестированию (проверяет знания)
-- Эксперт по интервью (ты)
 
 Ты помогаешь студентам готовиться к собеседованиям и развивать навыки презентации себя.
 
-{context}
+{student_context}
 
 ТВОИ ЗАДАЧИ:
 - Проводить mock-интервью с студентом
 - Давать обратную связь по ответам студента
 - Обучать техникам ответов на вопросы интервью
 - Помогать формулировать сильные стороны и достижения
-- Обучать языку тела и презентации себя
-- Помогать составлять резюме и сопроводительные письма
 - Готовить к различным типам собеседований
 
 СТИЛЬ ОБЩЕНИЯ:
@@ -88,7 +85,7 @@ class EduPromptService(interface.IEduPromptService):
         ) as span:
             try:
                 # Получаем полный контекст студента
-                context = await self._get_student_context(account_id)
+                student_context = await self._get_student_context(account_id)
 
                 prompt = f"""
 КТО ТЫ:
@@ -100,7 +97,7 @@ class EduPromptService(interface.IEduPromptService):
 
 Ты помогаешь студентам изучать материал, объясняешь сложные концепции и направляешь в обучении.
 
-{context}
+{student_context}
 
 ТВОИ ЗАДАЧИ:
 - Объяснять материал простым и понятным языком
@@ -153,7 +150,7 @@ class EduPromptService(interface.IEduPromptService):
         ) as span:
             try:
                 # Получаем полный контекст студента
-                context = await self._get_student_context(account_id)
+                student_context = await self._get_student_context(account_id)
 
                 prompt = f"""
 КТО ТЫ:
@@ -165,7 +162,7 @@ class EduPromptService(interface.IEduPromptService):
 
 Ты создаешь тесты, проверяешь знания студентов и помогаешь им подготовиться к экзаменам.
 
-{context}
+{student_context}
 
 ТВОИ ЗАДАЧИ:
 - Создавать тесты и вопросы по изученному материалу
@@ -217,17 +214,15 @@ class EduPromptService(interface.IEduPromptService):
                 raise err
 
     async def _get_student_context(self, student_id: int) -> str:
-        """Получает полный контекст студента для формирования промпта"""
         try:
-            # Получаем прогресс студента
-            progress = (await self.edu_progress_repo.get_progress_by_account_id(student_id))[0]
+            progress = (await self.edu_progress_repo.get_progress_by_student_id(student_id))[0]
 
             current_topic_id = await self.edu_progress_repo.get_current_topic_id(progress.id)
             current_block_id = await self.edu_progress_repo.get_current_block_id(progress.id)
             current_chapter_id = await self.edu_progress_repo.get_current_chapter_id(progress.id)
 
             current_topic = await self.topic_repo.get_topic_by_id(current_topic_id)
-            current_block = await self.topic_repo.get_block_by_id(current_topic_id)
+            current_block = await self.topic_repo.get_block_by_id(current_block_id)
             current_chapter = await self.topic_repo.get_chapter_by_id(current_topic_id)
 
             # Получаем доступные темы, блоки и главы
@@ -238,58 +233,24 @@ class EduPromptService(interface.IEduPromptService):
 
             context = f"""
 ТЕКУЩЕЕ СОСТОЯНИЕ СТУДЕНТА:
-- Текущая тема: {current_topic.name if current_topic else "Не выбрана"}
-- Описание темы: {current_topic.intro if current_topic else "Не определено"}
-- План обучения: {current_topic.edu_plan if current_topic else "Не определен"}
-- Текущий блок: {current_block.name if current_block else "Не выбран"}
-- Содержание блока: {current_block.content if current_block and len(current_block.content) < 500 else "Большой объем контента" if current_block else "Не определено"}
-- Текущая глава: {current_chapter.name if current_chapter else "Не выбрана"}
-- Содержание главы: {current_chapter.content if current_chapter and len(current_chapter.content) < 500 else "Большой объем контента" if current_chapter else "Не определено"}
+- Текущая тема: {current_topic[0].name if current_topic else "Не выбрана"}
+- Описание темы: {current_topic[0].intro if current_topic else "Не определено"}
+- План обучения: {current_topic[0].edu_plan if current_topic else "Не определен"}
+- Текущий блок: {current_block[0].name if current_block else "Не выбран"}
+- Содержание блока: {current_block[0].content if current_block and len(current_block[0].content) < 500 else "Большой объем контента" if current_block else "Не определено"}
+- Текущая глава: {current_chapter[0].name if current_chapter else "Не выбрана"}
+- Содержание главы: {current_chapter[0].content if current_chapter and len(current_chapter[0].content) < 500 else "Большой объем контента" if current_chapter else "Не определено"}
 
 ПРОГРЕСС СТУДЕНТА:
-- Завершенные темы: {len(completed_topics)} из {len(available_topics)}
-- Завершенные блоки: {len(completed_blocks)} из {len(available_blocks)}
-- Завершенные главы: {len(completed_chapters)} из {len(available_chapters)}
-
-ДОСТУПНЫЕ МАТЕРИАЛЫ:
-- Доступные темы: {', '.join([t.name for t in available_topics[:5]])}{'...' if len(available_topics) > 5 else ''}
-- Доступные блоки в текущей теме: {', '.join([b.name for b in available_blocks[:3]])}{'...' if len(available_blocks) > 3 else ''}
-- Доступные главы в текущем блоке: {', '.join([c.name for c in available_chapters[:3]])}{'...' if len(available_chapters) > 3 else ''}
-
-РЕКОМЕНДАЦИИ:
-{self._get_recommendations(progress, current_topic, current_block, current_chapter, completed_topics, completed_blocks, completed_chapters)}
+- Пройденные темы: {approved_topics}
+- Завершенные блоки: {approved_blocks}
+- Завершенные главы: {approved_chapters}
 """
             return context
         except Exception as err:
             return f"ОШИБКА ПОЛУЧЕНИЯ КОНТЕКСТА: {str(err)}"
 
-    def _get_recommendations(self, progress, current_topic, current_block, current_chapter,
-                             completed_topics, completed_blocks, completed_chapters) -> str:
-        """Генерирует рекомендации для студента"""
-        recommendations = []
-
-        if not current_topic:
-            recommendations.append("Студент должен выбрать тему для изучения")
-        elif not current_block:
-            recommendations.append("Студент должен выбрать блок в текущей теме")
-        elif not current_chapter:
-            recommendations.append("Студент должен выбрать главу в текущем блоке")
-        else:
-            recommendations.append("Студент изучает материал, можно предложить тест после изучения")
-
-        if len(completed_chapters) > 0 and not completed_blocks:
-            recommendations.append("Студент завершил главы, можно предложить тест по блоку")
-
-        if len(completed_blocks) > 0 and not completed_topics:
-            recommendations.append("Студент завершил блоки, можно предложить финальный тест по теме")
-
-        if len(completed_topics) > 2:
-            recommendations.append("Студент изучил несколько тем, можно предложить подготовку к собеседованию")
-
-        return "- " + "\n- ".join(recommendations) if recommendations else "Нет специальных рекомендаций"
-
     def _get_navigation_rules(self) -> str:
-        """Правила навигации по образовательному контенту"""
         return f"""
 ПРАВИЛА НАВИГАЦИИ ПО КОНТЕНТУ:
 
@@ -297,9 +258,9 @@ class EduPromptService(interface.IEduPromptService):
 1. Переход к теме: "{common.EduNavigationCommand.to_topic}:[ID или название темы]"
 2. Переход к блоку: "{common.EduNavigationCommand.to_block}:[ID или название блока]"  
 3. Переход к главе: "{common.EduNavigationCommand.to_chapter}:[ID или название главы]"
-4. Показать доступные темы: "{common.EduNavigationCommand.show_topics}"
-5. Показать доступные блоки: "{common.EduNavigationCommand.show_blocks}"
-6. Показать доступные главы: "{common.EduNavigationCommand.show_chapters}"
+4. Показать пройденные темы: "{common.EduNavigationCommand.show_approved_topics}"
+5. Показать пройденные блоки: "{common.EduNavigationCommand.show_approved_blocks}"
+6. Показать пройденные главы: "{common.EduNavigationCommand.show_approved_chapters}"
 7. Показать прогресс: "{common.EduNavigationCommand.show_progress}"
 
 КОГДА ИСПОЛЬЗОВАТЬ КОМАНДЫ НАВИГАЦИИ:
@@ -311,12 +272,6 @@ class EduPromptService(interface.IEduPromptService):
 - Студент спрашивает "какой у меня прогресс?"
 - Студент хочет "вернуться к предыдущей теме"
 
-ОПРЕДЕЛЕНИЕ НАМЕРЕНИЙ НАВИГАЦИИ:
-- Ключевые слова: "перейти", "изучать", "хочу", "можно", "доступно", "список", "выбрать"
-- Названия тем/блоков/глав в сообщении студента
-- Вопросы о структуре курса
-- Запросы на смену текущего контента
-
 ВАЖНО:
 - Всегда обновляй контекст после навигации
 - Объясняй студенту, куда он переходит
@@ -325,8 +280,6 @@ class EduPromptService(interface.IEduPromptService):
 """
 
     def _get_expert_switch_rules(self, exclude_expert: str) -> str:
-        """Генерирует правила переключения между экспертами"""
-
         teacher_rules = f"""
 Команда для переключения на преподавателя: "{common.EduStateSwitchCommand.to_teacher}":
    КОГДА ПЕРЕКЛЮЧАТЬ:
@@ -426,84 +379,3 @@ class EduPromptService(interface.IEduPromptService):
 - "Покажи доступные темы" → к преподавателю + команда навигации
 - "Перейди к блоку 'Основы программирования'" → к преподавателю + навигация
 """
-
-    async def detect_navigation_intent(self, message: str, account_id: int) -> Optional[Dict[str, Any]]:
-        """Определяет намерение навигации в сообщении студента"""
-        try:
-            # Получаем контекст для анализа
-            available_topics = await self.edu_progress_repo.get_available_topics(account_id)
-            available_blocks = await self.edu_progress_repo.get_available_blocks(account_id)
-            available_chapters = await self.edu_progress_repo.get_available_chapters(account_id)
-
-            message_lower = message.lower()
-
-            # Проверяем прямые команды навигации
-            navigation_patterns = {
-                'show_topics': ['покажи темы', 'доступные темы', 'список тем', 'какие темы'],
-                'show_blocks': ['покажи блоки', 'доступные блоки', 'список блоков', 'какие блоки'],
-                'show_chapters': ['покажи главы', 'доступные главы', 'список глав', 'какие главы'],
-                'show_progress': ['мой прогресс', 'прогресс обучения', 'что я прошел', 'мои достижения'],
-                'to_topic': ['перейти к теме', 'изучать тему', 'хочу изучить', 'начать тему'],
-                'to_block': ['перейти к блоку', 'изучать блок', 'начать блок'],
-                'to_chapter': ['перейти к главе', 'изучать главу', 'начать главу']
-            }
-
-            for command, patterns in navigation_patterns.items():
-                if any(pattern in message_lower for pattern in patterns):
-                    # Пытаемся извлечь название контента
-                    content_name = self._extract_content_name(message, command)
-                    return {
-                        'command': command,
-                        'content_name': content_name,
-                        'confidence': 0.9
-                    }
-
-            # Проверяем упоминания названий тем/блоков/глав
-            for topic in available_topics:
-                if topic.name.lower() in message_lower:
-                    return {
-                        'command': 'to_topic',
-                        'content_name': topic.name,
-                        'content_id': topic.id,
-                        'confidence': 0.8
-                    }
-
-            for block in available_blocks:
-                if block.name.lower() in message_lower:
-                    return {
-                        'command': 'to_block',
-                        'content_name': block.name,
-                        'content_id': block.id,
-                        'confidence': 0.8
-                    }
-
-            for chapter in available_chapters:
-                if chapter.name.lower() in message_lower:
-                    return {
-                        'command': 'to_chapter',
-                        'content_name': chapter.name,
-                        'content_id': chapter.id,
-                        'confidence': 0.8
-                    }
-
-            return None
-
-        except Exception as err:
-            return None
-
-    def _extract_content_name(self, message: str, command: str) -> Optional[str]:
-        """Извлекает название контента из сообщения"""
-        # Простая логика извлечения названия после ключевых слов
-        patterns = {
-            'to_topic': [r'тему?\s+["\']?([^"\']+)["\']?', r'изучи[ть]?\s+([^\s]+)'],
-            'to_block': [r'блок[у]?\s+["\']?([^"\']+)["\']?'],
-            'to_chapter': [r'глав[у]?\s+["\']?([^"\']+)["\']?']
-        }
-
-        if command in patterns:
-            for pattern in patterns[command]:
-                match = re.search(pattern, message, re.IGNORECASE)
-                if match:
-                    return match.group(1).strip()
-
-        return None
