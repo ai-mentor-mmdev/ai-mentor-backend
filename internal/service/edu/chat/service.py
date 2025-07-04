@@ -46,8 +46,10 @@ class EduService:
             history=messages + [{"role": "user", "content": message}]
         )
 
-        # 3. Извлекаем команды и чистый текст
-        commands, clean_response = self._extract_commands(llm_response)
+        commands = await self.llm_client.generate(
+            system_prompt=system_prompt,
+            history=messages + [{"role": "user", "content": message}]
+        )
 
         # 4. Выполняем команды
         command_results = await self._execute_commands(

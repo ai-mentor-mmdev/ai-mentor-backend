@@ -114,8 +114,6 @@ class Student:
             cls(
                 id=row.id,
                 account_id=row.account_id,
-                login=row.login,
-                password=row.password,
                 interview_stage=row.interview_stage,
                 interview_completed=row.interview_completed,
                 programming_experience=row.programming_experience,

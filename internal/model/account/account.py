@@ -5,7 +5,6 @@ from datetime import datetime
 @dataclass
 class Account:
     id: int
-    account_id: int
 
     login: str
     password: str
@@ -18,7 +17,6 @@ class Account:
         return [
             cls(
                 id=row.id,
-                account_id=row.account_id,
                 login=row.login,
                 password=row.password,
                 created_at=row.created_at,
