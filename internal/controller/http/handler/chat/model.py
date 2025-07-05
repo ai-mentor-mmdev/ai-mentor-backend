@@ -14,5 +14,6 @@ class SendMessageToExpertResponse(BaseModel):
 
     def to_dict(self):
         return {
-            "commands": [command.to_dict() for command in self.commands]
+            "commands": [command.to_dict() for command in self.commands],
+            "user_message": self.user_message,
         }
