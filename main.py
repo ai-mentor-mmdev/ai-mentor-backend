@@ -13,11 +13,13 @@ from internal.repo.chat.repo import ChatRepo
 from internal.repo.edu.topic.repo import TopicRepo
 
 # Services
+from internal.service.edu.topic.service import EduTopicService
 from internal.service.chat.service import ChatService
 from internal.service.chat.prompt import PromptGenerator
 
 # Controllers
 from internal.controller.http.handler.chat.handler import ChatController
+from internal.controller.http.handler.edu.topic.handler import EduTopicController
 from internal.controller.http.middlerware.middleware import HttpMiddleware
 
 # App
@@ -75,13 +77,13 @@ llm_client = GPTClient(
 account_repo = AccountRepo(tel, db)
 student_repo = StudentRepo(tel, db)
 chat_repo = ChatRepo(tel, db)
-topic_repo = TopicRepo(tel, db, storage)
+edu_topic_repo = TopicRepo(tel, db, storage)
 
 # Инициализация сервисов
 prompt_generator = PromptGenerator(
     tel,
     student_repo,
-    topic_repo
+    edu_topic_repo
 )
 
 chat_service = ChatService(
@@ -89,10 +91,12 @@ chat_service = ChatService(
     llm_client,
     prompt_generator,
     student_repo,
-    topic_repo,
+    edu_topic_repo,
     chat_repo,
     account_repo
 )
+
+edu_topic_service = EduTopicService(tel, edu_topic_repo)
 
 # Инициализация middleware
 http_middleware = HttpMiddleware(
@@ -104,6 +108,11 @@ http_middleware = HttpMiddleware(
 chat_controller = ChatController(
     tel,
     chat_service
+)
+
+EduTopicController = EduTopicController(
+    tel,
+    edu_topic_service
 )
 
 if __name__ == '__main__':
