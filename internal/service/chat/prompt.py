@@ -1,15 +1,10 @@
-# internal/service/edu/prompt/service.py
 from opentelemetry.trace import Status, StatusCode, SpanKind
-from typing import List, Optional
-import json
 
-from internal import interface, model
+from internal import interface
 from .topic_formatter import EducationDataFormatter
 
 
-class EduPromptService(interface.IEduChatPromptGenerator):
-    """Сервис для генерации промптов с системой метаданных команд"""
-
+class PromptGenerator(interface.IPromptGenerator):
     def __init__(
             self,
             tel: interface.ITelemetry,
@@ -21,7 +16,6 @@ class EduPromptService(interface.IEduChatPromptGenerator):
         self.student_repo = student_repo
         self.topic_repo = topic_repo
 
-        # Вспомогательные методы
 
     async def _format_student_context(self, student_id: int) -> str:
         students = await self.student_repo.get_by_id(student_id)
@@ -112,9 +106,9 @@ class EduPromptService(interface.IEduChatPromptGenerator):
             self.logger.error(f"Ошибка получения контекста контента: {e}")
             return "ТЕКУЩИЙ КОНТЕНТ: Ошибка загрузки"
 
-    async def get_registrator_expert_prompt(self) -> str:
+    async def get_registrator_prompt(self) -> str:
         with self.tracer.start_as_current_span(
-                "EduPromptService.get_registrator_expert_prompt",
+                "EduPromptService.get_registrator_prompt",
                 kind=SpanKind.INTERNAL
         ) as span:
             formatted_all_topic = await self._format_all_content_metadata()
@@ -142,10 +136,10 @@ class EduPromptService(interface.IEduChatPromptGenerator):
 {{
     "user_message": "Я зарегистрировал вас в системе, давайте пройдем интервью для составления личного плана обучения",
     "metadata": {{
-        "actions": [
+        "commands": [
             {{
-               "description": "Создаю Account и Student в БД",
-                "command": "register_user",
+                "description": "Создаю Account и Student в БД",
+                "name": "register_user",
                 "params": {{"login": "student_login", "password": "student_password"}}
             }}
     ],
@@ -227,7 +221,7 @@ class EduPromptService(interface.IEduChatPromptGenerator):
         "actions": [
             {{
                "description": "Создаю Account и Student в БД",
-                "command": "register_user",
+                "name": "register_user",
                 "params": {{"login": "student_login", "password": "student_password"}}
             }}
     ],
@@ -361,8 +355,8 @@ class EduPromptService(interface.IEduChatPromptGenerator):
     "metadata": {{
         "actions": [
             {{
-               "description": "Создаю Account и Student в БД",
-                "command": "register_user",
+                "description": "Создаю Account и Student в БД",
+                "name": "register_user",
                 "params": {{"login": "student_login", "password": "student_password"}}
             }}
     ],
@@ -371,17 +365,16 @@ class EduPromptService(interface.IEduChatPromptGenerator):
 ```
 
 КОМАНДЫ, КОТОРЫЕ ТЫ МОЖЕШЬ ИСПОЛЬЗОВАТЬ:
-- nav_to_topic
-Параметры: {{"topic_id": "id темы", "block_id: "id блока". "chapter_id": "id главы"}}
-Описание: "Студент хочет перейти к другой теме на блок и главу"
-
-- nav_to_block
-Параметры: {{"topic_id": "id темы", "block_id: "id блока". "chapter_id": "id главы"}}
-Описание: "Студент хочет перейти к другому блоку в теме на главу"
-
-- nav_to_chapter
-Параметры: {{"topic_id": "id темы", "block_id: "id блока". "chapter_id": "id главы"}}
-Описание: "Студент хочет перейти главы в теме на блоке"
+- change_edu_content
+Параметры: {{
+    "topic_id": "id темы",
+    "topic_name": "название темы"
+    "block_id: "id блока",
+    "block_name": "название блока",
+    "chapter_id": "id главы"
+    "chapter_name": "название главы"
+}}
+Описание: "Студент хочет перейти на другую тему, блок или главу"
 
 - switch_to_next_expert: 
 Параметры: {{"next_expert": "expert_name"}}
@@ -456,8 +449,8 @@ class EduPromptService(interface.IEduChatPromptGenerator):
     "metadata": {{
         "actions": [
             {{
-               "description": "Создаю Account и Student в БД",
-                "command": "register_user",
+                "description": "Создаю Account и Student в БД",
+                "name": "register_user",
                 "params": {{"login": "student_login", "password": "student_password"}}
             }}
     ],
@@ -489,15 +482,15 @@ class EduPromptService(interface.IEduChatPromptGenerator):
 
 КОМАНДЫ, КОТОРЫЕ ТЫ МОЖЕШЬ ИСПОЛЬЗОВАТЬ:
 - approve_topic
-Параметры: {{"topic_id": "id тема"}}
+Параметры: {{"topic_id": "id тема", "topic_name": "имя топика"}}
 Описание: "Студент прошел тест по теме хотя бы на 60%"
 
 - approve_block
-Параметры: {{"block_id": "id блока"}}
+Параметры: {{"block_id": "id блока", "topic_name": "имя блока"}}
 Описание: "Студент прошел тест по блоку хотя бы на 60%"
 
 - approve_chapter
-Параметры: {{"chapter_id": "id главы"}}
+Параметры: {{"chapter_id": "id главы", "topic_name": "имя главы"}}
 Описание: "Студент прошел тест по главе хотя бы на 60%"
 
 - switch_to_next_expert: 

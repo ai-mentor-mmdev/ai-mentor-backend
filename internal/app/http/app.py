@@ -34,35 +34,11 @@ def include_chat_handlers(
         prefix: str
 ):
     app.add_api_route(
-        prefix + "/message/send/registrator",
-        chat_controller.send_message_to_registrator,
+        prefix + "/message/send",
+        chat_controller.send_message_to_expert,
         methods=["POST"],
         summary="Отправить сообщение регистратору",
         description="Отправляет сообщение регистратору"
-    )
-
-    app.add_api_route(
-        prefix + "/message/send/interview-expert",
-        chat_controller.send_message_to_interview_expert,
-        methods=["POST"],
-        summary="Отправить сообщение интервью-эксперту",
-        description="Отправляет сообщение интервью-эксперту для подготовки к собеседованию"
-    )
-
-    app.add_api_route(
-        prefix + "/message/send/teacher",
-        chat_controller.send_message_to_teacher,
-        methods=["POST"],
-        summary="Отправить сообщение преподавателю",
-        description="Отправляет сообщение преподавателю для изучения материала"
-    )
-
-    app.add_api_route(
-        prefix + "/message/send/test-expert",
-        chat_controller.send_message_to_test_expert,
-        methods=["POST"],
-        summary="Отправить сообщение тест-эксперту",
-        description="Отправляет сообщение тест-эксперту для проверки знаний"
     )
 
 

@@ -1,5 +1,7 @@
 from pydantic import BaseModel
 
+from internal import common
+
 
 class SendMessageToExpert(BaseModel):
     student_id: int
@@ -7,4 +9,10 @@ class SendMessageToExpert(BaseModel):
 
 
 class SendMessageToExpertResponse(BaseModel):
-    llm_response: str
+    user_message: str
+    commands: list[common.Command]
+
+    def to_dict(self):
+        return {
+            "commands": [command.to_dict() for command in self.commands]
+        }
