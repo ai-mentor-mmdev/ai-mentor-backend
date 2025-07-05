@@ -30,3 +30,6 @@ class Config:
     monitoring_redis_port: int = int(os.environ.get('MONITORING_REDIS_PORT'))
     monitoring_redis_db: int = int(os.environ.get('MONITORING_DEDUPLICATE_ERROR_ALERT_REDIS_DB'))
     monitoring_redis_password: str = os.environ.get('MONITORING_REDIS_PASSWORD')
+
+    weed_master_host: str = os.environ.get('WEED_MASTER_CONTAINER_NAME')
+    weed_master_port: int = int(os.environ.get('WEED_MASTER_PORT'))

@@ -2,8 +2,9 @@ import uvicorn
 
 # External dependencies
 from infrastructure.pg.pg import PG
-from infrastructure.telemetry.telemetry import Telemetry, AlertManager
+from infrastructure.weedfs.weedfs import Weed
 from pkg.client.external.openai.client import GPTClient
+from infrastructure.telemetry.telemetry import Telemetry, AlertManager
 
 # Repositories
 from internal.repo.account.repo import AccountRepo
@@ -62,6 +63,8 @@ db = PG(
     cfg.db_name
 )
 
+storage = Weed(cfg.weed_master_host, cfg.weed_master_port)
+
 # Инициализация LLM клиента
 llm_client = GPTClient(
     tel,
@@ -72,7 +75,7 @@ llm_client = GPTClient(
 account_repo = AccountRepo(tel, db)
 student_repo = StudentRepo(tel, db)
 chat_repo = ChatRepo(tel, db)
-topic_repo = TopicRepo(tel, db)
+topic_repo = TopicRepo(tel, db, storage)
 
 # Инициализация сервисов
 prompt_generator = PromptGenerator(
