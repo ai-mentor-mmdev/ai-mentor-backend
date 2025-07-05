@@ -7,6 +7,7 @@ from internal import model
 def NewHTTP(
         db: interface.IDB,
         chat_controller: interface.IChatController,
+        edu_student_controller: interface.IEduStudentController,  # Добавить параметр
         http_middleware: interface.IHttpMiddleware,
         prefix: str
 ):
@@ -15,6 +16,7 @@ def NewHTTP(
 
     include_db_handler(app, db, prefix)
     include_chat_handlers(app, chat_controller, prefix)
+    include_student_handlers(app, edu_student_controller, prefix)  # Добавить вызов
 
     return app
 
@@ -28,6 +30,7 @@ def include_middleware(
     http_middleware.trace_middleware01(app)
 
 
+
 def include_chat_handlers(
         app: FastAPI,
         chat_controller: interface.IChatController,
@@ -39,6 +42,19 @@ def include_chat_handlers(
         methods=["POST"],
         summary="Отправить сообщение регистратору",
         description="Отправляет сообщение регистратору"
+    )
+
+def include_student_handlers(
+        app: FastAPI,
+        student_controller: interface.IStudentController,
+        prefix: str
+):
+    app.add_api_route(
+        prefix + "/student/{student_id}",
+        student_controller.get_student_by_id,
+        methods=["GET"],
+        summary="Получить информацию о студенте",
+        description="Возвращает полную информацию о студенте по его ID"
     )
 
 

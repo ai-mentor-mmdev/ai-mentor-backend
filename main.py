@@ -20,6 +20,7 @@ from internal.service.chat.prompt import PromptGenerator
 # Controllers
 from internal.controller.http.handler.chat.handler import ChatController
 from internal.controller.http.handler.edu.topic.handler import EduTopicController
+from internal.controller.http.handler.edu.student.handler import EduStudentController
 from internal.controller.http.middlerware.middleware import HttpMiddleware
 
 # App
