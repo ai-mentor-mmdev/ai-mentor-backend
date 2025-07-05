@@ -45,8 +45,8 @@ create_queries = [
     CREATE TABLE IF NOT EXISTS topics (
         id SERIAL PRIMARY KEY,
         name VARCHAR(255) NOT NULL,
-        intro TEXT,
-        edu_plan TEXT,
+        intro_file_id VARCHAR(255),
+        edu_plan_file_id VARCHAR(255),
         created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
         updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
     );
@@ -56,7 +56,7 @@ create_queries = [
         id SERIAL PRIMARY KEY,
         topic_id INTEGER REFERENCES topics(id) ON DELETE CASCADE,
         name VARCHAR(255) NOT NULL,
-        content TEXT,
+        content_file_id VARCHAR(255),
         created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
         updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
     );
@@ -67,7 +67,7 @@ create_queries = [
         topic_id INTEGER REFERENCES topics(id) ON DELETE CASCADE,
         block_id INTEGER REFERENCES blocks(id) ON DELETE CASCADE,
         name VARCHAR(255) NOT NULL,
-        content TEXT,
+        content_file_id VARCHAR(255),
         created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
         updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
     );

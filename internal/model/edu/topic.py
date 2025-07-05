@@ -7,8 +7,8 @@ class Topic:
     id: int
 
     name: str
-    intro: str
-    edu_plan: str
+    intro_file_id: str = None
+    edu_plan_file_id: str = None
 
     created_at: datetime = field(default_factory=datetime.now)
     updated_at: datetime = field(default_factory=datetime.now)
@@ -17,8 +17,8 @@ class Topic:
         return {
             "id": self.id,
             "name": self.name,
-            "intro": self.intro,
-            "edu_plan": self.edu_plan,
+            "intro_file_id": self.intro_file_id,
+            "edu_plan_file_id": self.edu_plan_file_id,
             "created_at": self.created_at.isoformat(),
             "updated_at": self.updated_at.isoformat()
         }
@@ -29,8 +29,8 @@ class Topic:
             cls(
                 id=row.id,
                 name=row.name,
-                intro=row.intro,
-                edu_plan=row.edu_plan,
+                intro_file_id=row.intro_file_id,
+                edu_plan_file_id=row.edu_plan_file_id,
                 created_at=row.created_at,
                 updated_at=row.updated_at,
             )
@@ -44,7 +44,7 @@ class Block:
     topic_id: int
 
     name: str
-    content: str
+    content_file_id: str = None
 
     created_at: datetime = field(default_factory=datetime.now)
     updated_at: datetime = field(default_factory=datetime.now)
@@ -54,7 +54,7 @@ class Block:
             "id": self.id,
             "topic_id": self.topic_id,
             "name": self.name,
-            "content": self.content,
+            "content_file_id": self.content_file_id,
             "created_at": self.created_at.isoformat(),
             "updated_at": self.updated_at.isoformat()
         }
@@ -66,7 +66,7 @@ class Block:
                 id=row.id,
                 topic_id=row.topic_id,
                 name=row.name,
-                content=row.content,
+                content_file_id=row.content_file_id,
                 created_at=row.created_at,
                 updated_at=row.updated_at,
             )
@@ -81,7 +81,7 @@ class Chapter:
     block_id: int
 
     name: str
-    content: str
+    content_file_id: str = None
 
     created_at: datetime = field(default_factory=datetime.now)
     updated_at: datetime = field(default_factory=datetime.now)
@@ -92,7 +92,7 @@ class Chapter:
             "topic_id": self.topic_id,
             "block_id": self.block_id,
             "name": self.name,
-            "content": self.content,
+            "content_file_id": self.content_file_id,
             "created_at": self.created_at.isoformat(),
             "updated_at": self.updated_at.isoformat()
         }
@@ -105,7 +105,7 @@ class Chapter:
                 topic_id=row.topic_id,
                 block_id=row.block_id,
                 name=row.name,
-                content=row.content,
+                content_file_id=row.content_file_id,
                 created_at=row.created_at,
                 updated_at=row.updated_at,
             )

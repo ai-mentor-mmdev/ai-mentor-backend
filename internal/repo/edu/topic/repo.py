@@ -1,3 +1,5 @@
+import io
+
 from opentelemetry.trace import SpanKind, Status, StatusCode
 
 from .query import *
@@ -6,8 +8,9 @@ from internal import interface
 
 
 class TopicRepo(interface.ITopicRepo):
-    def __init__(self, tel: interface.ITelemetry, db: interface.IDB):
+    def __init__(self, tel: interface.ITelemetry, db: interface.IDB, storage: interface.IStorage):
         self.db = db
+        self.storage = storage
         self.tracer = tel.tracer()
 
     # Topic methods
@@ -181,3 +184,76 @@ class TopicRepo(interface.ITopicRepo):
                 span.record_exception(err)
                 span.set_status(StatusCode.ERROR, str(err))
                 raise err
+
+    async def create_topic(self, name: str, intro_file_id: str, edu_plan_file_id: str) -> int:
+        with self.tracer.start_as_current_span(
+                "TopicRepo.create_topic",
+                kind=SpanKind.INTERNAL,
+                attributes={"name": name}
+        ) as span:
+            try:
+                args = {
+                    'name': name,
+                    'intro_file_id': intro_file_id,
+                    'edu_plan_file_id': edu_plan_file_id
+                }
+                topic_id = await self.db.insert(create_topic, args)
+
+                span.set_status(StatusCode.OK)
+                return topic_id
+            except Exception as err:
+                span.record_exception(err)
+                span.set_status(StatusCode.ERROR, str(err))
+                raise err
+
+    async def create_block(self, topic_id: int, name: str, content_file_id: str) -> int:
+        with self.tracer.start_as_current_span(
+                "TopicRepo.create_block",
+                kind=SpanKind.INTERNAL,
+                attributes={"topic_id": topic_id, "name": name}
+        ) as span:
+            try:
+                args = {
+                    'topic_id': topic_id,
+                    'name': name,
+                    'content_file_id': content_file_id
+                }
+                block_id = await self.db.insert(create_block, args)
+
+                span.set_status(StatusCode.OK)
+                return block_id
+            except Exception as err:
+                span.record_exception(err)
+                span.set_status(StatusCode.ERROR, str(err))
+                raise err
+
+    async def create_chapter(self, topic_id: int, block_id: int, name: str, content_file_id: str) -> int:
+        with self.tracer.start_as_current_span(
+                "TopicRepo.create_chapter",
+                kind=SpanKind.INTERNAL,
+                attributes={"topic_id": topic_id, "block_id": block_id, "name": name}
+        ) as span:
+            try:
+                args = {
+                    'topic_id': topic_id,
+                    'block_id': block_id,
+                    'name': name,
+                    'content_file_id': content_file_id
+                }
+                chapter_id = await self.db.insert(create_chapter, args)
+
+                span.set_status(StatusCode.OK)
+                return chapter_id
+            except Exception as err:
+                span.record_exception(err)
+                span.set_status(StatusCode.ERROR, str(err))
+                raise err
+
+
+    async def upload_file(self, file: io.BytesIO, file_name: str) -> str:
+        response = self.storage.upload(file, file_name)
+        return response.fid
+
+    async def download_file(self, file_id: str, file_name: str) -> tuple[io.BytesIO, str]:
+        file, content_type = self.storage.download(file_id, file_name)
+        return file, content_type

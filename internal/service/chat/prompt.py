@@ -98,7 +98,11 @@ class PromptGenerator(interface.IPromptGenerator):
                 if chapter:
                     context_parts.append(f"- Глава: {chapter[0].name}")
                     context_parts.append(f"- ID Главы: {chapter[0].id}")
-                    context_parts.append(f"- Содержание главы: {chapter[0].content}")
+                    chapter_content = await self.topic_repo.download_file(
+                        chapter[0].content_file_id,
+                        chapter[0].name,
+                    )
+                    context_parts.append(f"- Содержание главы: {chapter_content}")
 
             return "\n".join(context_parts)
 

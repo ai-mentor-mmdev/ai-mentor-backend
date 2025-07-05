@@ -1,3 +1,4 @@
+import io
 from abc import abstractmethod
 from typing import Protocol
 
@@ -5,6 +6,15 @@ from internal import model
 
 
 class ITopicRepo(Protocol):
+    @abstractmethod
+    async def create_topic(self, name: str, intro_file_id: str, edu_plan_file_id: str) -> int: pass
+
+    @abstractmethod
+    async def create_block(self, topic_id: int, name: str, content_file_id: str) -> int: pass
+
+    @abstractmethod
+    async def create_chapter(self, topic_id: int, block_id: int, name: str, content_file_id: str) -> int: pass
+
     @abstractmethod
     async def update_current_topic(self, student_id: int, topic_id: int, topic_name: str): pass
 
@@ -31,3 +41,9 @@ class ITopicRepo(Protocol):
 
     @abstractmethod
     async def get_all_chapter(self) -> list[model.Chapter]: pass
+
+    @abstractmethod
+    async def upload_file(self, file: io.BytesIO, file_name: str) -> str: pass
+
+    @abstractmethod
+    async def download_file(self, file_id: str, file_name: str) -> tuple[io.BytesIO, str]: pass
