@@ -22,6 +22,7 @@ class EduPromptService(interface.IEduChatPromptGenerator):
         self.topic_repo = topic_repo
 
         # Вспомогательные методы
+
     async def _format_student_context(self, student_id: int) -> str:
         students = await self.student_repo.get_by_id(student_id)
         student = students[0] if students else None
@@ -80,11 +81,11 @@ class EduPromptService(interface.IEduChatPromptGenerator):
             context_parts = ["ТЕКУЩИЙ КОНТЕНТ:"]
 
             if student.current_topic:
-                    topic_id = list(student.current_topic)[0]
-                    topic_name = student.current_topic[topic_id]
+                topic_id = list(student.current_topic)[0]
+                topic_name = student.current_topic[topic_id]
 
-                    context_parts.append(f"- Тема: {topic_name}")
-                    context_parts.append(f"- ID Темы: {topic_id}")
+                context_parts.append(f"- Тема: {topic_name}")
+                context_parts.append(f"- ID Темы: {topic_id}")
             else:
                 context_parts.append("- Тема: Не выбрана")
 
@@ -105,7 +106,6 @@ class EduPromptService(interface.IEduChatPromptGenerator):
                     context_parts.append(f"- ID Главы: {chapter[0].id}")
                     context_parts.append(f"- Содержание главы: {chapter[0].content}")
 
-
             return "\n".join(context_parts)
 
         except Exception as e:
@@ -125,7 +125,7 @@ class EduPromptService(interface.IEduChatPromptGenerator):
 Твоя главная задача - представиться и собрать информацию о новом студенте для регистрации и логина.
 
 В системе есть следующие эксперты:
-- Эксперт по регистрации (ты) - проводишь регистрацию и логин (registrator_expert)
+- Эксперт по регистрации (ты) - проводишь регистрацию и логин (registrator)
 - Эксперт по интервью - проводит первичное интервью и профилирование (interview_expert)
 - Преподаватель - объясняет материал и ведет обучение (teacher)
 - Эксперт по тестированию - проверяет знания и оценивает прогресс (test_expert)
@@ -205,7 +205,7 @@ class EduPromptService(interface.IEduChatPromptGenerator):
 Твоя главная задача - собрать информацию о новом студенте для создания персонального плана обучения.
 
 В системе есть следующие эксперты:
-- Эксперт по регистрации - проводишь регистрацию и логин (registrator_expert)
+- Эксперт по регистрации - проводишь регистрацию и логин (registrator)
 - Эксперт по интервью (ты) - проводит первичное интервью и профилирование (interview_expert)
 - Преподаватель - объясняет материал и ведет обучение (teacher)
 - Эксперт по тестированию - проверяет знания и оценивает прогресс (test_expert)
@@ -301,7 +301,7 @@ class EduPromptService(interface.IEduChatPromptGenerator):
         "topic_id1": "topic_name1",
         "topic_id2": "topic_name2",
     }}
-    
+
     strong_areas: "Описание сильных ученика"
     weak_areas: "Описание слабых сторон ученика"
 }}
@@ -340,7 +340,7 @@ class EduPromptService(interface.IEduChatPromptGenerator):
 Ты помогаешь студентам изучать материал, объясняешь сложные концепции и направляешь в обучении.
 
 В системе есть следующие эксперты:
-- Эксперт по регистрации - проводишь регистрацию и логин (registrator_expert)
+- Эксперт по регистрации - проводишь регистрацию и логин (registrator)
 - Эксперт по интервью - проводит первичное интервью и профилирование (interview_expert)
 - Преподаватель (ты) - объясняет материал и ведет обучение (teacher)
 - Эксперт по тестированию - проверяет знания и оценивает прогресс (test_expert)
@@ -440,7 +440,7 @@ class EduPromptService(interface.IEduChatPromptGenerator):
 Ты создаешь тесты, проверяешь знания студентов и помогаешь выявить пробелы в обучении.
 
 В системе есть следующие эксперты:
-- Эксперт по регистрации - проводишь регистрацию и логин (registrator_expert)
+- Эксперт по регистрации - проводишь регистрацию и логин (registrator)
 - Эксперт по интервью - проводит первичное интервью и профилирование (interview_expert)
 - Преподаватель - объясняет материал и ведет обучение (teacher)
 - Эксперт по тестированию (ты) - проверяет знания и оценивает прогресс (test_expert)

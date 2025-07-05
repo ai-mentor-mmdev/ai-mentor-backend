@@ -2,7 +2,7 @@ from dataclasses import dataclass, field
 from datetime import datetime
 
 @dataclass
-class EduChat:
+class Chat:
     id: int
 
     student_id: int
@@ -24,11 +24,13 @@ class EduChat:
 
 
 @dataclass
-class EduMessage:
+class Message:
     id: int
-    edu_chat_id: int
+    chat_id: int
+
     text: str
     role: str
+
     created_at: datetime = field(default_factory=datetime.now)
     updated_at: datetime = field(default_factory=datetime.now)
 
@@ -37,7 +39,7 @@ class EduMessage:
         return [
             cls(
                 id=row.id,
-                edu_chat_id=row.edu_chat_id,
+                chat_id=row.chat_id,
                 text=row.text,
                 role=row.role,
                 created_at=row.created_at,

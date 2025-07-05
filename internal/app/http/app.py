@@ -6,7 +6,7 @@ from internal import model
 
 def NewHTTP(
         db: interface.IDB,
-        edu_chat_controller: interface.IEduChatController,
+        chat_controller: interface.IChatController,
         http_middleware: interface.IHttpMiddleware,
         prefix: str
 ):
@@ -14,7 +14,7 @@ def NewHTTP(
     include_middleware(app, http_middleware)
 
     include_db_handler(app, db, prefix)
-    include_edu_chat_handlers(app, edu_chat_controller, prefix)
+    include_chat_handlers(app, chat_controller, prefix)
 
     return app
 
@@ -28,30 +28,38 @@ def include_middleware(
     http_middleware.trace_middleware01(app)
 
 
-def include_edu_chat_handlers(
+def include_chat_handlers(
         app: FastAPI,
-        edu_chat_controller: interface.IEduChatController,
+        chat_controller: interface.IChatController,
         prefix: str
 ):
     app.add_api_route(
-        prefix + "/edu/message/send/interview-expert",
-        edu_chat_controller.send_message_to_interview_expert,
+        prefix + "/message/send/registrator",
+        chat_controller.send_message_to_registrator,
+        methods=["POST"],
+        summary="Отправить сообщение регистратору",
+        description="Отправляет сообщение регистратору"
+    )
+
+    app.add_api_route(
+        prefix + "/message/send/interview-expert",
+        chat_controller.send_message_to_interview_expert,
         methods=["POST"],
         summary="Отправить сообщение интервью-эксперту",
         description="Отправляет сообщение интервью-эксперту для подготовки к собеседованию"
     )
 
     app.add_api_route(
-        prefix + "/edu/message/send/teacher",
-        edu_chat_controller.send_message_to_teacher,
+        prefix + "/message/send/teacher",
+        chat_controller.send_message_to_teacher,
         methods=["POST"],
         summary="Отправить сообщение преподавателю",
         description="Отправляет сообщение преподавателю для изучения материала"
     )
 
     app.add_api_route(
-        prefix + "/edu/message/send/test-expert",
-        edu_chat_controller.send_message_to_test_expert,
+        prefix + "/message/send/test-expert",
+        chat_controller.send_message_to_test_expert,
         methods=["POST"],
         summary="Отправить сообщение тест-эксперту",
         description="Отправляет сообщение тест-эксперту для проверки знаний"
