@@ -1,7 +1,6 @@
 class DownloadTopicContentBody:
-    content_type: str #edu-plan, intro
-    topic_id: str
+    edu_content_type: str #edu-plan, intro
+    topic_id: int
 
 class DownloadBlockContentBody:
-    topic_id: str
-    block_id: str
+    block_id: int
