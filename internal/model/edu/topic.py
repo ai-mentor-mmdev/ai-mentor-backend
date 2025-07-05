@@ -13,6 +13,16 @@ class Topic:
     created_at: datetime = field(default_factory=datetime.now)
     updated_at: datetime = field(default_factory=datetime.now)
 
+    def to_dict(self) -> dict:
+        return {
+            "id": self.id,
+            "name": self.name,
+            "intro": self.intro,
+            "edu_plan": self.edu_plan,
+            "created_at": self.created_at.isoformat(),
+            "updated_at": self.updated_at.isoformat()
+        }
+
     @classmethod
     def serialize(cls, rows) -> list:
         return [
@@ -38,6 +48,16 @@ class Block:
 
     created_at: datetime = field(default_factory=datetime.now)
     updated_at: datetime = field(default_factory=datetime.now)
+
+    def to_dict(self) -> dict:
+        return {
+            "id": self.id,
+            "topic_id": self.topic_id,
+            "name": self.name,
+            "content": self.content,
+            "created_at": self.created_at.isoformat(),
+            "updated_at": self.updated_at.isoformat()
+        }
 
     @classmethod
     def serialize(cls, rows) -> list:
@@ -65,6 +85,17 @@ class Chapter:
 
     created_at: datetime = field(default_factory=datetime.now)
     updated_at: datetime = field(default_factory=datetime.now)
+
+    def to_dict(self) -> dict:
+        return {
+            "id": self.id,
+            "topic_id": self.topic_id,
+            "block_id": self.block_id,
+            "name": self.name,
+            "content": self.content,
+            "created_at": self.created_at.isoformat(),
+            "updated_at": self.updated_at.isoformat()
+        }
 
     @classmethod
     def serialize(cls, rows) -> list:
