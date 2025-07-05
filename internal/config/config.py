@@ -9,7 +9,7 @@ class Config:
 
     http_port: int = int(os.environ.get('BACKEND_PORT'))
     prefix = os.environ.get('BACKEND_PREFIX')
-    service_name = "ai-mentor-backend"
+    service_name = "backend"
 
     root_path = "/app"
     service_version = "0.0.1"
