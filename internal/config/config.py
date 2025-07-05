@@ -1,15 +1,15 @@
 import os
 
 class Config:
-    db_pass: str = os.environ.get('AI_MENTOR_POSTGRES_PASSWORD')
-    db_user: str = os.environ.get('AI_MENTOR_POSTGRES_USER')
-    db_name: str = os.environ.get('AI_MENTOR_POSTGRES_DB_NAME')
-    db_host: str = os.environ.get('AI_MENTOR_POSTGRES_HOST')
+    db_pass: str = os.environ.get('BACKEND_POSTGRES_PASSWORD')
+    db_user: str = os.environ.get('BACKEND_POSTGRES_USER')
+    db_name: str = os.environ.get('BACKEND_POSTGRES_DB_NAME')
+    db_host: str = os.environ.get('BACKEND_POSTGRES_HOST')
     db_port: str = "5432"
 
-    http_port: int = int(os.environ.get('AI_MENTOR_PORT'))
-    prefix = os.environ.get('AI_MENTOR_PREFIX')
-    service_name = "ai-mentor"
+    http_port: int = int(os.environ.get('BACKEND_PORT'))
+    prefix = os.environ.get('BACKEND_PREFIX')
+    service_name = "ai-mentor-backend"
 
     root_path = "/app"
     service_version = "0.0.1"
