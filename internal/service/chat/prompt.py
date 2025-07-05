@@ -39,7 +39,7 @@ class PromptGenerator(interface.IPromptGenerator):
 - Оценочный балл: {student.assessment_score if student.assessment_score is not None else 'Не указано'}
 - Предпочтения сложности: {student.preferred_difficulty or 'Не указано'}
 - Рекомендованная последовательность тем: {student.recommended_topics or 'Не указано'}
-- Рекомендованная последовательность блоков: {student.recommended_topics or 'Не указано'}
+- Рекомендованная последовательность блоков: {student.recommended_blocks or 'Не указано'}
 - Пройденные темы: {student.approved_topics or 'Не указано'}
 - Пройденные блоки: {student.approved_blocks or 'Не указано'}
 - Пройденные главы: {student.approved_chapters or 'Не указано'}
@@ -191,7 +191,7 @@ class PromptGenerator(interface.IPromptGenerator):
                 attributes={"student_id": student_id}
         ) as span:
             try:
-                student_context = self._format_student_context(student_id)
+                student_context = await self._format_student_context(student_id)
                 formatted_all_topic = await self._format_all_content_metadata()
 
                 prompt = f"""КТО ТЫ:
@@ -314,7 +314,6 @@ class PromptGenerator(interface.IPromptGenerator):
             except Exception as err:
                 span.record_exception(err)
                 span.set_status(Status(StatusCode.ERROR, str(err)))
-                self.logger.error(f"Ошибка генерации промпта для interview expert: {err}")
                 raise err
 
     async def get_teacher_prompt(self, student_id: int) -> str:
@@ -412,7 +411,6 @@ class PromptGenerator(interface.IPromptGenerator):
             except Exception as err:
                 span.record_exception(err)
                 span.set_status(Status(StatusCode.ERROR, str(err)))
-                self.logger.error(f"Ошибка генерации промпта для teacher: {err}")
                 raise err
 
     async def get_test_expert_prompt(self, student_id: int) -> str:
@@ -425,7 +423,7 @@ class PromptGenerator(interface.IPromptGenerator):
             try:
 
                 # Получаем контексты
-                student_context = self._format_student_context(student_id)
+                student_context = await self._format_student_context(student_id)
                 content_context = await self._get_current_content_context(student_id)
 
                 prompt = f"""КТО ТЫ:
@@ -506,6 +504,5 @@ class PromptGenerator(interface.IPromptGenerator):
             except Exception as err:
                 span.record_exception(err)
                 span.set_status(Status(StatusCode.ERROR, str(err)))
-                self.logger.error(f"Ошибка генерации промпта для test expert: {err}")
                 raise err
 

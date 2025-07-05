@@ -37,10 +37,11 @@ class ChatService(interface.IChatService):
 
                 chat = await self.chat_repo.get_chat_by_student_id(student_id)
                 if not chat:
-                    chat_id = await self.chat_repo.create_chat(student_id)
+                    _ = await self.chat_repo.create_chat(student_id)
                     chat = await self.chat_repo.get_chat_by_student_id(student_id)
+                chat_id = chat[0].id
 
-                message_id = await self.chat_repo.create_message(chat_id, common.Roles.user, text)
+                _ = await self.chat_repo.create_message(chat_id, common.Roles.user, text)
 
                 if student.current_expert == common.Experts.registrator:
                     system_prompt = await self.prompt_generator.get_registrator_prompt()
@@ -68,7 +69,7 @@ class ChatService(interface.IChatService):
                 commands = [common.Command(**command) for command in
                             response_data.get("metadata", {}).get("commands", [])]
 
-                message_id = await self.chat_repo.create_message(chat_id, common.Roles.assistant, user_message)
+                _ = await self.chat_repo.create_message(chat_id, common.Roles.assistant, user_message)
 
                 if student.current_expert == common.Experts.registrator:
                     await self._execute_registrator_commands(student_id, commands)

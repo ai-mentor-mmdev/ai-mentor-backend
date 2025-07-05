@@ -21,7 +21,7 @@ class ChatController(interface.IChatController):
                 "EduChatController.send_message_to_expert",
                 kind=SpanKind.INTERNAL,
                 attributes={
-                    "account_id": body.account_id,
+                    "student_id": body.student_id,
                     "text": body.text
                 }
         ) as span:
