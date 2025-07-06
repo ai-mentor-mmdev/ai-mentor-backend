@@ -51,7 +51,7 @@ def include_edu_topic_handlers(
         prefix: str
 ):
     app.add_api_route(
-        prefix + "/edu/topic/download/{file_id}",
+        prefix + "/edu/topic/download/{edu_content_type}/{file_id}",
         edu_topic_controller.download_topic_content,
         methods=["GET"],
     )

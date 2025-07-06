@@ -27,7 +27,7 @@ class ChatController(interface.IChatController):
         ) as span:
             try:
                 user_message, commands = await self.chat_service.send_message_to_expert(
-                    body.account_id,
+                    body.student_id,
                     body.text
                 )
 

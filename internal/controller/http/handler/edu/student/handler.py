@@ -1,4 +1,4 @@
-from fastapi import status, HTTPException
+from fastapi import status
 from fastapi.responses import JSONResponse
 from opentelemetry.trace import StatusCode, SpanKind
 

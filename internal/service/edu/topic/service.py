@@ -1,8 +1,7 @@
 import io
-import json
 from opentelemetry.trace import StatusCode, SpanKind
 
-from internal import interface, common
+from internal import interface
 
 
 class EduTopicService(interface.IEduTopicService):

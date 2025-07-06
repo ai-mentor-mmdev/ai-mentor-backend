@@ -8,10 +8,10 @@ from internal.controller.http.handler.edu.topic.model import *
 
 class IEduTopicController(Protocol):
     @abstractmethod
-    async def download_topic_content(self, body: DownloadTopicContentBody): pass
+    async def download_topic_content(self, edu_content_type: str, topic_id: int): pass
 
     @abstractmethod
-    async def download_block_content(self, body: DownloadBlockContentBody): pass
+    async def download_block_content(self, block_id: int): pass
 
 
 class IEduTopicService(Protocol):
