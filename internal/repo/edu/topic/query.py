@@ -51,7 +51,7 @@ ORDER BY topic_id ASC, id ASC;
 
 update_block = """
 UPDATE blocks
-SET name = :name, content = :content_file_id, updated_at = NOW()
+SET name = :name, content_file_id = :content_file_id, updated_at = NOW()
 WHERE id = :block_id;
 """
 

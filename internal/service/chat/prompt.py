@@ -65,50 +65,72 @@ class PromptGenerator(interface.IPromptGenerator):
 
     async def _get_current_content_context(self, student_id: int) -> str:
         """Получает контекст текущего изучаемого контента"""
-        students = await self.student_repo.get_by_id(student_id)
-        student = students[0] if students else None
-
-        if not student:
-            raise ValueError(f"Студент с ID {student_id} не найден")
-
         try:
+            students = await self.student_repo.get_by_id(student_id)
+            student = students[0] if students else None
+
+            if not student:
+                raise ValueError(f"Студент с ID {student_id} не найден")
+
             context_parts = ["ТЕКУЩИЙ КОНТЕНТ:"]
 
+            # Обработка текущей темы
             if student.current_topic:
-                topic_id = list(student.current_topic)[0]
+                topic_id = list(student.current_topic.keys())[0]  # Используем keys()
                 topic_name = student.current_topic[topic_id]
-
                 context_parts.append(f"- Тема: {topic_name}")
                 context_parts.append(f"- ID Темы: {topic_id}")
             else:
                 context_parts.append("- Тема: Не выбрана")
 
+            # Обработка текущего блока
             if student.current_block:
-                block_id = list(student.current_block)[0]
-                block = await self.topic_repo.get_block_by_id(block_id)
-                if block:
-                    context_parts.append(f"- Блок: {block[0].name}")
-                    context_parts.append(f"- ID Блока: {block[0].id}")
+                block_id = list(student.current_block.keys())[0]  # Используем keys()
+                try:
+                    blocks = await self.topic_repo.get_block_by_id(int(block_id))
+                    if blocks:
+                        block = blocks[0]
+                        context_parts.append(f"- Блок: {block.name}")
+                        context_parts.append(f"- ID Блока: {block.id}")
+                except Exception as e:
+                    self.logger.warning(f"Ошибка загрузки блока {block_id}: {e}")
+                    context_parts.append("- Блок: Ошибка загрузки")
             else:
                 context_parts.append("- Блок: Не выбран")
 
+            # Обработка текущей главы
             if student.current_chapter:
-                chapter_id = list(student.current_chapter)[0]
-                chapter = await self.topic_repo.get_chapter_by_id(chapter_id)
-                if chapter:
-                    context_parts.append(f"- Глава: {chapter[0].name}")
-                    context_parts.append(f"- ID Главы: {chapter[0].id}")
-                    chapter_content = await self.topic_repo.download_file(
-                        chapter[0].content_file_id,
-                        chapter[0].name,
-                    )
-                    context_parts.append(f"- Содержание главы: {chapter_content}")
+                chapter_id = list(student.current_chapter.keys())[0]  # Используем keys()
+                try:
+                    chapters = await self.topic_repo.get_chapter_by_id(int(chapter_id))
+                    if chapters:
+                        chapter = chapters[0]
+                        context_parts.append(f"- Глава: {chapter.name}")
+                        context_parts.append(f"- ID Главы: {chapter.id}")
+
+                        # Безопасная загрузка содержимого главы
+                        if chapter.content_file_id:
+                            try:
+                                chapter_content, _ = await self.topic_repo.download_file(
+                                    chapter.content_file_id,
+                                    chapter.name,
+                                )
+                                if chapter_content:
+                                    context_parts.append(f"- Содержание главы доступно")
+                            except Exception as e:
+                                self.logger.warning(f"Ошибка загрузки содержимого главы: {e}")
+                                context_parts.append(f"- Содержание главы: Ошибка загрузки")
+                except Exception as e:
+                    self.logger.warning(f"Ошибка загрузки главы {chapter_id}: {e}")
+                    context_parts.append("- Глава: Ошибка загрузки")
+            else:
+                context_parts.append("- Глава: Не выбрана")
 
             return "\n".join(context_parts)
 
         except Exception as e:
-            self.logger.error(f"Ошибка получения контекста контента: {e}")
-            return "ТЕКУЩИЙ КОНТЕНТ: Ошибка загрузки"
+            self.logger.error(f"Критическая ошибка получения контекста контента: {e}")
+            return "ТЕКУЩИЙ КОНТЕНТ: Критическая ошибка загрузки"
 
     async def get_registrator_prompt(self) -> str:
         with self.tracer.start_as_current_span(
@@ -329,7 +351,7 @@ class PromptGenerator(interface.IPromptGenerator):
         ) as span:
             try:
                 # Получаем контексты
-                student_context = self._format_student_context(student_id)
+                student_context = await self._format_student_context(student_id)
                 content_context = await self._get_current_content_context(student_id)
 
                 prompt = f"""КТО ТЫ:
@@ -488,7 +510,7 @@ class PromptGenerator(interface.IPromptGenerator):
 Описание: "Студент прошел тест по теме хотя бы на 60%"
 
 - approve_block
-Параметры: {{"block_id": "id блока", "topic_name": "имя блока"}}
+Параметры: {{"block_id": "id блока", "block_name": "имя блока"}}
 Описание: "Студент прошел тест по блоку хотя бы на 60%"
 
 - approve_chapter

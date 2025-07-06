@@ -95,23 +95,48 @@ class ChatService(interface.IChatService):
         try:
             # Убираем возможные лишние символы вокруг JSON
             response = response.strip()
+
+            # Удаляем markdown форматирование
             if response.startswith("```json"):
                 response = response[7:]
+            elif response.startswith("```"):
+                response = response[3:]
+
             if response.endswith("```"):
                 response = response[:-3]
 
+            response = response.strip()
+
+            # Парсим JSON
             parsed = json.loads(response)
 
             # Проверяем обязательные поля
             if "user_message" not in parsed:
-                raise ValueError("Отсутствует поле 'user_message' в ответе LLM")
+                self.logger.warning("Отсутствует поле 'user_message' в ответе LLM")
+                return {
+                    "user_message": "Извините, произошла ошибка обработки ответа. Попробуйте еще раз.",
+                    "metadata": {"commands": []}
+                }
+
+            # Проверяем структуру metadata
+            if "metadata" not in parsed:
+                parsed["metadata"] = {"commands": []}
+            elif "commands" not in parsed["metadata"]:
+                parsed["metadata"]["commands"] = []
 
             return parsed
 
         except json.JSONDecodeError as e:
+            self.logger.error(f"Ошибка парсинга JSON от LLM: {e}, response: {response}")
             return {
-                "user_message": "Извините, произошла ошибка. Попробуйте еще раз.",
-                "metadata": {}
+                "user_message": "Извините, произошла ошибка обработки ответа. Попробуйте переформулировать вопрос.",
+                "metadata": {"commands": []}
+            }
+        except Exception as e:
+            self.logger.error(f"Неожиданная ошибка при обработке ответа LLM: {e}")
+            return {
+                "user_message": "Произошла системная ошибка. Обратитесь к администратору.",
+                "metadata": {"commands": []}
             }
 
     async def _execute_registrator_commands(self, student_id: int, commands: list[common.Command]):
@@ -172,14 +197,17 @@ class ChatService(interface.IChatService):
                 topic_id = params["topic_id"]
                 topic_name = params["topic_name"]
                 await self._approve_topic(student_id, topic_id, topic_name)
+
             elif command_name == "approve_block":
                 block_id = params["block_id"]
-                topic_name = params["topic_name"]
-                await self._approve_block(student_id, block_id, topic_name)
+                block_name = params["block_name"]
+                await self._approve_block(student_id, block_id, block_name)
+
             elif command_name == "approve_chapter":
                 chapter_id = params["chapter_id"]
                 chapter_name = params["chapter_name"]
                 await self._approve_chapter(student_id, chapter_id, chapter_name)
+
             elif command_name == "switch_to_next_expert":
                 await self._switch_expert(student_id, params.get("next_expert"))
 
