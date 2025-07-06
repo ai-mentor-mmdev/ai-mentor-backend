@@ -2,7 +2,7 @@ from opentelemetry.trace import StatusCode, SpanKind
 
 from internal import interface, model
 
-class IEduStudentService(interface.IEduStudentService):
+class EduStudentService(interface.IEduStudentService):
     def __init__(
             self,
             tel: interface.ITelemetry,
@@ -12,7 +12,7 @@ class IEduStudentService(interface.IEduStudentService):
         self.logger = tel.logger()
         self.student_repo = student_repo
 
-    async def get_student_by_id(self, student_id: int) -> model.Student:
+    async def get_by_id(self, student_id: int) -> model.Student:
         with self.tracer.start_as_current_span(
                 "IEduStudentService.get_student_by_id",
                 kind=SpanKind.INTERNAL,

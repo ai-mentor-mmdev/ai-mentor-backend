@@ -7,7 +7,8 @@ from internal import model
 def NewHTTP(
         db: interface.IDB,
         chat_controller: interface.IChatController,
-        edu_student_controller: interface.IEduStudentController,  # Добавить параметр
+        edu_student_controller: interface.IEduStudentController,
+        edu_topic_controller: interface.IEduTopicController,
         http_middleware: interface.IHttpMiddleware,
         prefix: str
 ):
@@ -16,7 +17,8 @@ def NewHTTP(
 
     include_db_handler(app, db, prefix)
     include_chat_handlers(app, chat_controller, prefix)
-    include_student_handlers(app, edu_student_controller, prefix)  # Добавить вызов
+    include_edu_student_handlers(app, edu_student_controller, prefix)
+    include_edu_topic_handlers(app, edu_topic_controller, prefix)
 
     return app
 
@@ -30,31 +32,46 @@ def include_middleware(
     http_middleware.trace_middleware01(app)
 
 
-
 def include_chat_handlers(
         app: FastAPI,
         chat_controller: interface.IChatController,
         prefix: str
 ):
     app.add_api_route(
-        prefix + "/message/send",
+        prefix + "/chat/message/send",
         chat_controller.send_message_to_expert,
         methods=["POST"],
         summary="Отправить сообщение регистратору",
         description="Отправляет сообщение регистратору"
     )
 
-def include_student_handlers(
+def include_edu_topic_handlers(
         app: FastAPI,
-        student_controller: interface.IStudentController,
+        edu_topic_controller: interface.IEduTopicController,
         prefix: str
 ):
     app.add_api_route(
-        prefix + "/student/{student_id}",
-        student_controller.get_student_by_id,
+        prefix + "/edu/topic/download/{file_id}",
+        edu_topic_controller.download_topic_content,
         methods=["GET"],
-        summary="Получить информацию о студенте",
-        description="Возвращает полную информацию о студенте по его ID"
+    )
+
+    app.add_api_route(
+        prefix + "/edu/block/download/{file_id}",
+        edu_topic_controller.download_block_content,
+        methods=["GET"],
+    )
+
+
+def include_edu_student_handlers(
+        app: FastAPI,
+        edu_student_controller: interface.IEduStudentController,
+        prefix: str
+):
+    app.add_api_route(
+        prefix + "/edu/student/{student_id}",
+        edu_student_controller.get_by_id,
+        methods=["GET"],
     )
 
 

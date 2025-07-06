@@ -13,6 +13,7 @@ from internal.repo.chat.repo import ChatRepo
 from internal.repo.edu.topic.repo import TopicRepo
 
 # Services
+from internal.service.edu.student.service import EduStudentService
 from internal.service.edu.topic.service import EduTopicService
 from internal.service.chat.service import ChatService
 from internal.service.chat.prompt import PromptGenerator
@@ -98,6 +99,7 @@ chat_service = ChatService(
 )
 
 edu_topic_service = EduTopicService(tel, edu_topic_repo)
+edu_student_service = EduStudentService(tel, student_repo)
 
 # Инициализация middleware
 http_middleware = HttpMiddleware(
@@ -111,9 +113,14 @@ chat_controller = ChatController(
     chat_service
 )
 
-EduTopicController = EduTopicController(
+edu_topic_controller = EduTopicController(
     tel,
     edu_topic_service
+)
+
+edu_student_controller = EduStudentController(
+    tel,
+    edu_student_service
 )
 
 if __name__ == '__main__':
@@ -132,6 +139,8 @@ if __name__ == '__main__':
         http_app = NewHTTP(
             db,
             chat_controller,
+            edu_student_controller,
+            edu_topic_controller,
             http_middleware,
             cfg.prefix
         )
