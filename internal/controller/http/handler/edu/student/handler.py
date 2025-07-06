@@ -10,13 +10,13 @@ class EduStudentController(interface.IEduStudentController):
     def __init__(
             self,
             tel: interface.ITelemetry,
-            student_repo: interface.IStudentRepo
+            student_service: interface.IEduStudentService
     ):
         self.tracer = tel.tracer()
         self.logger = tel.logger()
-        self.student_repo = student_repo
+        self.student_service = student_service
 
-    async def get_student_by_id(self, student_id: int):
+    async def get_by_id(self, student_id: int):
         with self.tracer.start_as_current_span(
                 "StudentController.get_student_by_id",
                 kind=SpanKind.INTERNAL,
@@ -25,17 +25,7 @@ class EduStudentController(interface.IEduStudentController):
                 }
         ) as span:
             try:
-                students = await self.student_repo.get_by_id(student_id)
-
-                if not students:
-                    raise HTTPException(
-                        status_code=404,
-                        detail=f"Student with id {student_id} not found"
-                    )
-
-                student = students[0]
-
-                # Конвертируем модель в Pydantic response
+                student = await self.student_service.get_by_id(student_id)
                 response = StudentResponse(
                     id=student.id,
                     account_id=student.account_id,

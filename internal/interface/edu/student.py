@@ -2,9 +2,16 @@ from abc import abstractmethod
 from typing import Protocol, Optional
 from internal import model
 
+
 class IEduStudentController(Protocol):
     @abstractmethod
-    async def get_student_by_id(self, student_id: int): pass
+    async def get_by_id(self, student_id: int): pass
+
+
+class IEduStudentService(Protocol):
+    @abstractmethod
+    async def get_by_id(self, student_id: int) -> model.Student: pass
+
 
 class IStudentRepo(Protocol):
     @abstractmethod
